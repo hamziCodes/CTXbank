@@ -35,7 +35,15 @@
       </div>
       <div class="brand-text">
         <span class="brand-title">CTXbank</span>
-        <span class="brand-badge" id="repo-name">Loading...</span>
+        <button class="project-selector-btn" id="btn-project-selector" title="Switch or Add Projects">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="project-name" id="repo-name">CTXbank</span>
+          <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -469,6 +477,60 @@
           <button class="btn btn-secondary" id="btn-cancel-editor">Close</button>
           <button class="btn btn-primary" id="btn-save-file">Save Changes</button>
         </div>
+      </div>
+    </div>
+  <!-- Modal: Project Switcher & Workspace Ingestion -->
+  <div class="modal-overlay" id="project-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="flex items-center gap-3">
+          <h3 class="modal-title">Select Project & Workspace</h3>
+          <span class="chip clean">Multi-Project Ready</span>
+        </div>
+        <button class="btn-close" id="btn-close-project-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 20px;">
+        
+        <!-- Active Project Card -->
+        <div class="active-project-banner">
+          <div class="flex items-center gap-3">
+            <span class="status-dot"></span>
+            <div>
+              <div class="font-bold text-sm">Currently Active: <span id="modal-active-project-name" class="text-accent">CTXbank</span></div>
+              <div class="text-xs text-muted font-mono" id="modal-active-project-path">d:\PROJECTS\PASSION PROJECTS\CTXbank</div>
+            </div>
+          </div>
+          <span class="chip clean">Active</span>
+        </div>
+
+        <!-- Discovered Projects -->
+        <div>
+          <div class="font-bold text-sm mb-2">Discovered CTXbank Projects on Your Machine</div>
+          <div id="discovered-projects-list" class="discovered-projects-list">
+            <div class="text-xs text-muted">Scanning workspace folders...</div>
+          </div>
+        </div>
+
+        <!-- Open / Ingest Existing Folder -->
+        <div class="ingest-folder-card">
+          <div class="font-bold text-sm mb-1">Open or Ingest Any Project Folder</div>
+          <p class="text-xs text-muted mb-3">
+            Paste the absolute path to any folder on your computer. If it doesn't have CTXbank yet, you can initialize and scan it in 1 click without altering existing code.
+          </p>
+          <div class="flex gap-2">
+            <input type="text" id="input-custom-folder-path" class="form-input font-mono text-xs" placeholder="e.g. D:\PROJECTS\my-existing-web-app">
+            <button class="btn btn-primary" id="btn-inspect-custom-folder" style="white-space: nowrap;">Inspect Folder</button>
+          </div>
+
+          <!-- Inspection Result Card -->
+          <div id="folder-inspect-result" style="display: none; margin-top: 14px;" class="folder-inspect-box">
+            <!-- Populated by app.js -->
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-project-modal">Close</button>
       </div>
     </div>
   </div>

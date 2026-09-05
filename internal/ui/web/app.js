@@ -573,11 +573,187 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           showToast(`Budget warning: ${data.warning || 'Exceeds budget'}`);
         }
-      } catch (e) {
-        showToast('Lint check failed.');
+  // 8. Project Selector & Multi-Workspace Manager
+  const btnProjectSelector = document.getElementById('btn-project-selector');
+  const projectModal = document.getElementById('project-modal');
+  const btnCloseProjectModal = document.getElementById('btn-close-project-modal');
+  const btnCancelProjectModal = document.getElementById('btn-cancel-project-modal');
+  const discoveredProjectsList = document.getElementById('discovered-projects-list');
+  const btnInspectCustomFolder = document.getElementById('btn-inspect-custom-folder');
+  const inputCustomFolderPath = document.getElementById('input-custom-folder-path');
+  const folderInspectResult = document.getElementById('folder-inspect-result');
+
+  if (btnProjectSelector) {
+    btnProjectSelector.addEventListener('click', () => {
+      projectModal.classList.add('active');
+      loadProjectsModal();
+    });
+  }
+
+  if (btnCloseProjectModal) btnCloseProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+  if (btnCancelProjectModal) btnCancelProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+
+  async function loadProjectsModal() {
+    try {
+      const res = await fetch('/api/projects');
+      const data = await res.json();
+
+      document.getElementById('modal-active-project-name').textContent = data.current_project;
+      document.getElementById('modal-active-project-path').textContent = data.current_path;
+
+      discoveredProjectsList.innerHTML = '';
+      const list = data.discovered || [];
+      if (list.length === 0) {
+        discoveredProjectsList.innerHTML = '<div class="text-xs text-muted p-2">No other CTXbank projects found in sibling folders. Enter any folder path below to open or scan it.</div>';
+        return;
+      }
+
+      list.forEach(p => {
+        const isCurrent = (p.path === data.current_path);
+        const item = document.createElement('div');
+        item.className = `project-card-item ${isCurrent ? 'is-current' : ''}`;
+        item.innerHTML = `
+          <div>
+            <div class="font-bold text-sm flex items-center gap-2">
+              <span>${p.name}</span>
+              ${isCurrent ? '<span class="chip clean text-xs">Current</span>' : ''}
+            </div>
+            <div class="text-xs text-muted font-mono" style="margin-top: 2px;">${p.path}</div>
+          </div>
+          <div>
+            ${isCurrent ? '<span class="text-xs text-muted">Active</span>' : `<button class="btn btn-sm btn-secondary" onclick="window.ctxSwitchProject('${encodeURIComponent(p.path)}')">Switch</button>`}
+          </div>
+        `;
+        discoveredProjectsList.appendChild(item);
+      });
+    } catch (e) {
+      discoveredProjectsList.innerHTML = '<div class="text-xs text-muted">Failed to discover projects.</div>';
+    }
+  }
+
+  // Global window handler for inline onclick
+  window.ctxSwitchProject = async function(encodedPath) {
+    const path = decodeURIComponent(encodedPath);
+    await executeSwitchProject(path);
+  };
+
+  async function executeSwitchProject(path) {
+    showToast(`Switching workspace to ${path}...`);
+    try {
+      const res = await fetch('/api/project/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: path })
+      });
+      const data = await res.json();
+      if (data.success) {
+        projectModal.classList.remove('active');
+        showToast(`Workspace switched to ${data.name}!`);
+        loadStatus();
+        if (currentView === 'overview-view') loadStatus();
+        if (currentView === 'memory-view') loadFiles();
+        if (currentView === 'graph-view') loadGraph();
+        if (currentView === 'checkpoints-view') loadCheckpoints();
+      } else {
+        showToast('Failed to switch: ' + (data.error || 'unknown'));
+      }
+    } catch (e) {
+      showToast('Error switching workspace.');
+    }
+  }
+
+  if (btnInspectCustomFolder) {
+    btnInspectCustomFolder.addEventListener('click', async () => {
+      const path = inputCustomFolderPath.value.trim();
+      if (!path) {
+        showToast('Please enter a folder path.');
+        return;
+      }
+
+      btnInspectCustomFolder.disabled = true;
+      btnInspectCustomFolder.textContent = 'Inspecting...';
+      folderInspectResult.style.display = 'block';
+      folderInspectResult.innerHTML = '<div class="text-xs text-muted">Inspecting directory structure and CTXbank state...</div>';
+
+      try {
+        const res = await fetch(`/api/project/inspect?path=${encodeURIComponent(path)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          folderInspectResult.innerHTML = `<div class="text-xs" style="color: var(--negative);">Error: ${data.error}</div>`;
+          return;
+        }
+
+        if (data.has_bank) {
+          folderInspectResult.innerHTML = `
+            <div class="flex-between">
+              <div>
+                <div class="font-bold text-sm">${data.name}</div>
+                <div class="text-xs text-muted font-mono">${data.path}</div>
+                <div class="text-xs text-muted" style="margin-top: 4px;">Git Branch: <strong>${data.branch || 'unknown'}</strong> | Status: <strong>${data.dirty_count} modified</strong></div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-open-inspected-project">Open This Project</button>
+            </div>
+          `;
+          document.getElementById('btn-open-inspected-project').addEventListener('click', () => {
+            executeSwitchProject(data.path);
+          });
+        } else {
+          folderInspectResult.innerHTML = `
+            <div class="flex-between" style="align-items: flex-start; gap: 16px;">
+              <div>
+                <div class="font-bold text-sm flex items-center gap-2">
+                  <span>${data.name}</span>
+                  <span class="chip" style="background: var(--attention-soft); color: var(--attention);">Uninitialized Codebase</span>
+                </div>
+                <div class="text-xs text-muted font-mono" style="margin-top: 2px;">${data.path}</div>
+                <p class="text-xs text-muted" style="margin-top: 6px; line-height: 1.5;">
+                  This project has not been initialized with CTXbank yet. Clicking below will create its memory bank and automatically run AST reconnaissance to detect its tech stack, frameworks, and architecture rules.
+                </p>
+              </div>
+              <button class="btn btn-primary" id="btn-init-inspected-project" style="white-space: nowrap;">✨ Scan & Initialize</button>
+            </div>
+          `;
+          document.getElementById('btn-init-inspected-project').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-init-inspected-project');
+            btn.disabled = true;
+            btn.textContent = 'Scanning Codebase...';
+            showToast('Initializing CTXbank and scanning code...');
+
+            try {
+              const initRes = await fetch('/api/project/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: data.path })
+              });
+              const initData = await initRes.json();
+              if (initData.success) {
+                projectModal.classList.remove('active');
+                showToast(`Project ${initData.name} initialized and scanned!`);
+                loadStatus();
+                if (currentView === 'overview-view') loadStatus();
+                if (currentView === 'memory-view') loadFiles();
+                if (currentView === 'graph-view') loadGraph();
+                if (currentView === 'checkpoints-view') loadCheckpoints();
+              } else {
+                showToast('Initialization failed: ' + (initData.error || 'unknown'));
+              }
+            } catch (err) {
+              showToast('Error during initialization.');
+            }
+          });
+        }
+
+      } catch (err) {
+        folderInspectResult.innerHTML = '<div class="text-xs" style="color: var(--negative);">Failed to inspect folder. Make sure the path exists.</div>';
+      } finally {
+        btnInspectCustomFolder.disabled = false;
+        btnInspectCustomFolder.textContent = 'Inspect Folder';
       }
     });
   }
+
+
 
   // Toast Notification System
   function showToast(message) {

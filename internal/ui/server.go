@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ctxbank/ctx/internal/audit"
@@ -20,6 +21,7 @@ import (
 	"github.com/ctxbank/ctx/internal/git"
 	"github.com/ctxbank/ctx/internal/ingest"
 	"github.com/ctxbank/ctx/internal/linter"
+	"github.com/ctxbank/ctx/internal/workspace"
 	"github.com/ctxbank/ctx/pkg/types"
 )
 
@@ -28,6 +30,7 @@ var embeddedFiles embed.FS
 
 // Server hosts the CTXbank local interactive web dashboard.
 type Server struct {
+	mu      sync.RWMutex
 	RepoDir string
 	BankDir string
 	Port    int
@@ -46,6 +49,19 @@ func NewServer(repoDir string, port int) *Server {
 	}
 }
 
+func (s *Server) getPaths() (string, string) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.RepoDir, s.BankDir
+}
+
+func (s *Server) setRepoDir(newRepo string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.RepoDir = newRepo
+	s.BankDir = filepath.Join(newRepo, core.MemoryBankDir)
+}
+
 // Start binds to localhost, serves the API and embedded UI, and opens the default browser.
 func (s *Server) Start(openBrowser bool) error {
 	mux := http.NewServeMux()
@@ -62,6 +78,10 @@ func (s *Server) Start(openBrowser bool) error {
 	mux.HandleFunc("/api/lint", s.handleLint)
 	mux.HandleFunc("/api/ingest/preview", s.handleIngestPreview)
 	mux.HandleFunc("/api/ingest/commit", s.handleIngestCommit)
+	mux.HandleFunc("/api/projects", s.handleProjects)
+	mux.HandleFunc("/api/project/inspect", s.handleProjectInspect)
+	mux.HandleFunc("/api/project/switch", s.handleProjectSwitch)
+	mux.HandleFunc("/api/project/init", s.handleProjectInit)
 
 	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
 	var fileSystem http.FileSystem
@@ -103,10 +123,11 @@ func (s *Server) Start(openBrowser bool) error {
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
-	branch, _ := git.GetCurrentBranch(s.RepoDir)
-	dirtyFiles, _ := git.GetStatus(s.RepoDir)
+	repoDir, bankDir := s.getPaths()
+	branch, _ := git.GetCurrentBranch(repoDir)
+	dirtyFiles, _ := git.GetStatus(repoDir)
 
-	activePath := filepath.Join(s.BankDir, "activeContext.md")
+	activePath := filepath.Join(bankDir, "activeContext.md")
 	activeFocus := "No active focus declared"
 	idleHours := 0.0
 	var lineCount int
@@ -135,8 +156,8 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"project_name":  filepath.Base(s.RepoDir),
-		"repo_dir":      s.RepoDir,
+		"project_name":  filepath.Base(repoDir),
+		"repo_dir":      repoDir,
 		"branch":        branch,
 		"dirty_count":   len(dirtyFiles),
 		"dirty_files":   dirtyFiles,
@@ -148,7 +169,8 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
-	manifest, err := core.LoadManifest(s.BankDir)
+	_, bankDir := s.getPaths()
+	manifest, err := core.LoadManifest(bankDir)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to load manifest")
 		return
@@ -165,7 +187,7 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 
 	var results []FileDetail
 	for name, meta := range manifest.Files {
-		filePath := filepath.Join(s.BankDir, name)
+		filePath := filepath.Join(bankDir, name)
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			continue
@@ -185,13 +207,14 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFileGet(w http.ResponseWriter, r *http.Request) {
+	_, bankDir := s.getPaths()
 	name := r.URL.Query().Get("name")
 	if name == "" {
 		respondError(w, http.StatusBadRequest, "file name required")
 		return
 	}
 	cleanName := filepath.Base(name)
-	filePath := filepath.Join(s.BankDir, cleanName)
+	filePath := filepath.Join(bankDir, cleanName)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "file not found")
@@ -228,17 +251,19 @@ func (s *Server) handleFileSave(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	targetPath := filepath.Join(s.BankDir, req.Filename)
+	_, bankDir := s.getPaths()
+	targetPath := filepath.Join(bankDir, req.Filename)
 	if err := core.WriteAtomic(targetPath, []byte(req.Content), 0644); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	_ = core.UpdateFileMeta(s.BankDir, req.Filename, "")
+	_ = core.UpdateFileMeta(bankDir, req.Filename, "")
 	respondJSON(w, http.StatusOK, map[string]string{"status": "saved", "filename": req.Filename})
 }
 
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
+	_, bankDir := s.getPaths()
 	type Node struct {
 		ID       string `json:"id"`
 		Label    string `json:"label"`
@@ -266,7 +291,7 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 
 	// Read line counts
 	for i, n := range nodes {
-		p := filepath.Join(s.BankDir, n.Label)
+		p := filepath.Join(bankDir, n.Label)
 		if data, err := os.ReadFile(p); err == nil {
 			nodes[i].Lines = len(strings.Split(string(data), "\n"))
 			if n.ID == "activeContext" && nodes[i].Lines > 120 {
@@ -289,7 +314,7 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add recent checkpoints to the tree
-	ckptIDs, _ := checkpoint.ListSnapshots(s.BankDir)
+	ckptIDs, _ := checkpoint.ListSnapshots(bankDir)
 	for i, id := range ckptIDs {
 		if i >= 5 {
 			break
@@ -314,7 +339,8 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCheckpoints(w http.ResponseWriter, r *http.Request) {
-	ids, err := checkpoint.ListSnapshots(s.BankDir)
+	_, bankDir := s.getPaths()
+	ids, err := checkpoint.ListSnapshots(bankDir)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to list checkpoints")
 		return
@@ -322,7 +348,7 @@ func (s *Server) handleCheckpoints(w http.ResponseWriter, r *http.Request) {
 
 	var fullCheckpoints []types.Checkpoint
 	for _, id := range ids {
-		ckpt, err := checkpoint.LoadSnapshot(s.BankDir, id)
+		ckpt, err := checkpoint.LoadSnapshot(bankDir, id)
 		if err == nil {
 			fullCheckpoints = append(fullCheckpoints, *ckpt)
 		}
@@ -348,7 +374,8 @@ func (s *Server) handleCheckpointCreate(w http.ResponseWriter, r *http.Request) 
 		manualEdits = append(manualEdits, req.Notes)
 	}
 
-	ckpt, err := checkpoint.CreateSnapshot(s.BankDir, s.RepoDir, req.Focus, nil, manualEdits)
+	repoDir, bankDir := s.getPaths()
+	ckpt, err := checkpoint.CreateSnapshot(bankDir, repoDir, req.Focus, nil, manualEdits)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -358,7 +385,8 @@ func (s *Server) handleCheckpointCreate(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) handleAudit(w http.ResponseWriter, r *http.Request) {
-	report, err := audit.RunAudit(s.RepoDir)
+	repoDir, _ := s.getPaths()
+	report, err := audit.RunAudit(repoDir)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -367,8 +395,9 @@ func (s *Server) handleAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleLint(w http.ResponseWriter, r *http.Request) {
+	_, bankDir := s.getPaths()
 	fix := r.URL.Query().Get("fix") == "true"
-	res, err := linter.LintMemoryBank(s.BankDir, fix)
+	res, err := linter.LintMemoryBank(bankDir, fix)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -396,7 +425,8 @@ func (s *Server) handleIngestPreview(w http.ResponseWriter, r *http.Request) {
 	_ = os.WriteFile(tempFile, []byte(req.Content), 0644)
 	defer os.Remove(tempFile)
 
-	prop, err := ingest.PrepareIngestion(s.BankDir, tempFile)
+	_, bankDir := s.getPaths()
+	prop, err := ingest.PrepareIngestion(bankDir, tempFile)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -417,20 +447,141 @@ func (s *Server) handleIngestCommit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	repoDir, bankDir := s.getPaths()
 	// Write temporary dummy source if not present
 	if _, err := os.Stat(prop.SourceFile); os.IsNotExist(err) {
-		tempSrc := filepath.Join(s.RepoDir, "research", "inbox", "web_upload.md")
+		tempSrc := filepath.Join(repoDir, "research", "inbox", "web_upload.md")
 		_ = os.MkdirAll(filepath.Dir(tempSrc), 0755)
 		_ = os.WriteFile(tempSrc, []byte(prop.ProposedDiff), 0644)
 		prop.SourceFile = tempSrc
 	}
 
-	if err := ingest.CommitIngestion(s.BankDir, s.RepoDir, &prop); err != nil {
+	if err := ingest.CommitIngestion(bankDir, repoDir, &prop); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"status": "committed", "target": prop.TargetFile})
+}
+
+func (s *Server) handleProjects(w http.ResponseWriter, r *http.Request) {
+	repoDir, _ := s.getPaths()
+	parentDir := filepath.Dir(repoDir)
+	discovered, _ := workspace.ScanWorkspaces(parentDir, 2)
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"current_project": filepath.Base(repoDir),
+		"current_path":    repoDir,
+		"discovered":      discovered,
+	})
+}
+
+func (s *Server) handleProjectInspect(w http.ResponseWriter, r *http.Request) {
+	targetPath := r.URL.Query().Get("path")
+	if targetPath == "" {
+		respondError(w, http.StatusBadRequest, "path parameter required")
+		return
+	}
+	cleanPath := filepath.Clean(targetPath)
+	fi, err := os.Stat(cleanPath)
+	if err != nil || !fi.IsDir() {
+		respondError(w, http.StatusNotFound, "directory does not exist")
+		return
+	}
+
+	manifestPath := filepath.Join(cleanPath, core.MemoryBankDir, core.StateDirname, core.ManifestFilename)
+	hasBank := false
+	if _, err := os.Stat(manifestPath); err == nil {
+		hasBank = true
+	}
+
+	branch, _ := git.GetCurrentBranch(cleanPath)
+	dirty, _ := git.GetStatus(cleanPath)
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"name":        filepath.Base(cleanPath),
+		"path":        cleanPath,
+		"has_bank":    hasBank,
+		"branch":      branch,
+		"dirty_count": len(dirty),
+	})
+}
+
+func (s *Server) handleProjectSwitch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		respondError(w, http.StatusMethodNotAllowed, "POST required")
+		return
+	}
+
+	var req struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
+		respondError(w, http.StatusBadRequest, "invalid path")
+		return
+	}
+	cleanPath := filepath.Clean(req.Path)
+	fi, err := os.Stat(cleanPath)
+	if err != nil || !fi.IsDir() {
+		respondError(w, http.StatusNotFound, "directory does not exist")
+		return
+	}
+
+	manifestPath := filepath.Join(cleanPath, core.MemoryBankDir, core.StateDirname, core.ManifestFilename)
+	if _, err := os.Stat(manifestPath); err != nil {
+		respondError(w, http.StatusBadRequest, "project has not been initialized with CTXbank yet")
+		return
+	}
+
+	s.setRepoDir(cleanPath)
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"name":    filepath.Base(cleanPath),
+		"path":    cleanPath,
+	})
+}
+
+func (s *Server) handleProjectInit(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		respondError(w, http.StatusMethodNotAllowed, "POST required")
+		return
+	}
+
+	var req struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
+		respondError(w, http.StatusBadRequest, "invalid path")
+		return
+	}
+	cleanPath := filepath.Clean(req.Path)
+	fi, err := os.Stat(cleanPath)
+	if err != nil || !fi.IsDir() {
+		respondError(w, http.StatusNotFound, "directory does not exist")
+		return
+	}
+
+	// 1. Initialize Memory Bank
+	if err := core.InitBank(cleanPath, false); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to initialize memory bank: "+err.Error())
+		return
+	}
+
+	// 2. Run Reconnaissance Audit & apply
+	bankDir := filepath.Join(cleanPath, core.MemoryBankDir)
+	report, err := audit.RunAudit(cleanPath)
+	if err == nil && report != nil {
+		_ = audit.ApplyAudit(bankDir, report)
+	}
+
+	// 3. Switch active workspace to this project
+	s.setRepoDir(cleanPath)
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"name":    filepath.Base(cleanPath),
+		"path":    cleanPath,
+	})
 }
 
 func getBudgetStatus(lines int) string {

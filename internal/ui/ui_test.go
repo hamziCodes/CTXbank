@@ -71,5 +71,21 @@ func TestUIServerAPIRoutes(t *testing.T) {
 	if fileResp["filename"] != "projectbrief.md" {
 		t.Errorf("expected filename projectbrief.md, got %v", fileResp["filename"])
 	}
+
+	// Test /api/projects handler
+	reqProjects := httptest.NewRequest(http.MethodGet, "/api/projects", nil)
+	wProjects := httptest.NewRecorder()
+	server.handleProjects(wProjects, reqProjects)
+	if wProjects.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/projects, got %d", wProjects.Code)
+	}
+
+	// Test /api/project/inspect handler
+	reqInspect := httptest.NewRequest(http.MethodGet, "/api/project/inspect?path="+tempWorkspace, nil)
+	wInspect := httptest.NewRecorder()
+	server.handleProjectInspect(wInspect, reqInspect)
+	if wInspect.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/project/inspect, got %d", wInspect.Code)
+	}
 }
 

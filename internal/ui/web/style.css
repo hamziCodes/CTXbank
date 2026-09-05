@@ -1142,3 +1142,96 @@ html.dark .file-name-title {
   from { transform: translateX(50px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* Project Selector Button in Header */
+.project-selector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-sunken);
+  border: 1px solid var(--app-line);
+  color: var(--app-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.project-selector-btn:hover {
+  background: var(--app-surface);
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-selector-btn .chevron-icon {
+  color: var(--app-ink-muted);
+  transition: transform 0.2s ease;
+}
+
+.project-selector-btn:hover .chevron-icon {
+  transform: translateY(1px);
+}
+
+/* Active Project Banner */
+.active-project-banner {
+  background: var(--brand-light);
+  border: 1px solid rgba(0, 119, 182, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Discovered Projects List */
+.discovered-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  background: var(--app-surface-sunken);
+}
+
+.project-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-xs);
+  transition: var(--transition-fast);
+}
+
+.project-card-item:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-card-item.is-current {
+  border-color: var(--positive);
+  background: var(--positive-soft);
+}
+
+/* Ingest Folder Card */
+.ingest-folder-card {
+  background: var(--app-surface-sunken);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+
+.folder-inspect-box {
+  background: var(--app-surface);
+  border: 1px solid var(--app-line-strong);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  animation: fadeIn 0.2s ease;
+}
