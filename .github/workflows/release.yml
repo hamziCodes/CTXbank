@@ -18,32 +18,26 @@ jobs:
           - os: windows
             arch: amd64
             runner: windows-latest
-            ext: .exe
             archive: zip
           - os: windows
             arch: arm64
             runner: windows-latest
-            ext: .exe
             archive: zip
           - os: darwin
             arch: arm64
             runner: macos-latest
-            ext: ""
             archive: tar.gz
           - os: darwin
             arch: amd64
             runner: macos-latest
-            ext: ""
             archive: tar.gz
           - os: linux
             arch: amd64
             runner: ubuntu-latest
-            ext: ""
             archive: tar.gz
           - os: linux
             arch: arm64
             runner: ubuntu-latest
-            ext: ""
             archive: tar.gz
     steps:
       - name: Checkout Code
@@ -54,27 +48,33 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Build Binaries
+      - name: Build & Package (Unix)
+        if: matrix.target.os != 'windows'
         env:
           GOOS: ${{ matrix.target.os }}
           GOARCH: ${{ matrix.target.arch }}
           CGO_ENABLED: 0
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w" -o dist/ctx${{ matrix.target.ext }} ./cmd/ctx
-          go build -ldflags="-s -w" -o dist/ctx-mcp${{ matrix.target.ext }} ./cmd/ctx-mcp
+          go build -ldflags="-s -w" -o dist/ctx ./cmd/ctx
+          go build -ldflags="-s -w" -o dist/ctx-mcp ./cmd/ctx-mcp
           cp README.md LICENSE dist/
-
-      - name: Create Zip Archive (Windows)
-        if: matrix.target.archive == 'zip'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path dist/* -DestinationPath "ctx-${{ matrix.target.os }}-${{ matrix.target.arch }}.zip"
-
-      - name: Create Tarball Archive (Unix)
-        if: matrix.target.archive == 'tar.gz'
-        run: |
           tar -czvf "ctx-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz" -C dist .
+
+      - name: Build & Package (Windows)
+        if: matrix.target.os == 'windows'
+        shell: pwsh
+        env:
+          GOOS: ${{ matrix.target.os }}
+          GOARCH: ${{ matrix.target.arch }}
+          CGO_ENABLED: 0
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          go build -ldflags="-s -w" -o dist/ctx.exe ./cmd/ctx
+          go build -ldflags="-s -w" -o dist/ctx-mcp.exe ./cmd/ctx-mcp
+          Copy-Item README.md -Destination dist/
+          Copy-Item LICENSE -Destination dist/
+          Compress-Archive -Path dist/* -DestinationPath "ctx-${{ matrix.target.os }}-${{ matrix.target.arch }}.zip" -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
