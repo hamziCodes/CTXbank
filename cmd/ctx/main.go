@@ -20,6 +20,7 @@ import (
 	"github.com/ctxbank/ctx/internal/mcp"
 	"github.com/ctxbank/ctx/internal/rules"
 	"github.com/ctxbank/ctx/internal/tui"
+	"github.com/ctxbank/ctx/internal/ui"
 	"github.com/ctxbank/ctx/internal/workspace"
 )
 
@@ -37,6 +38,8 @@ func main() {
 		runInit(os.Args[2:])
 	case "status":
 		runStatus(os.Args[2:])
+	case "ui", "dashboard":
+		runUI(os.Args[2:])
 	case "list":
 		runList(os.Args[2:])
 	case "pause", "checkpoint":
@@ -71,6 +74,7 @@ Usage:
 Commands:
   init            Initialize memory-bank/ layout and minimal vendor rules
   status [--json] Display single-shot project health and active context
+  ui [--port N]   Launch interactive VERTEX web dashboard in your browser
   list [dir]      List and inspect all CTXbank workspaces under directory
   pause           Safe checkpoint + capture manual out-of-band changes
   resume          Display instant pickup brief for human or agent
@@ -502,5 +506,25 @@ func runList(args []string) {
 		fmt.Printf("%-20s %-15s %-10s %-10s %s\n", p.Name, p.Branch, dirtyStr, idleStr, focus)
 	}
 }
+
+func runUI(args []string) {
+	fs := flag.NewFlagSet("ui", flag.ExitOnError)
+	portFlag := fs.Int("port", 4242, "Port to bind local dashboard server")
+	noOpenFlag := fs.Bool("no-open", false, "Do not automatically launch browser")
+	_ = fs.Parse(args)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	server := ui.NewServer(cwd, *portFlag)
+	if err := server.Start(!*noOpenFlag); err != nil {
+		fmt.Fprintf(os.Stderr, "Dashboard server error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 
 

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CTXbank — Deterministic Memory Bank Dashboard</title>
+  <!-- Pre-paint theme bootstrap: zero dark-mode flash -->
+  <script>
+    (function() {
+      const stored = localStorage.getItem('ctx_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Header Bar -->
+  <header>
+    <div class="brand">
+      <span class="logo-badge">CTX</span>
+      <span class="brand-title">CTXbank</span>
+      <span class="chip" id="repo-name">Repository</span>
+    </div>
+
+    <div class="header-status">
+      <span class="chip" id="branch-chip">branch: ...</span>
+      <span class="chip clean" id="dirty-chip">clean</span>
+      <button class="btn" id="btn-theme-toggle">Theme</button>
+      <button class="btn primary" id="btn-quick-checkpoint">+ Save Checkpoint</button>
+    </div>
+  </header>
+
+  <!-- Application Layout -->
+  <div class="app-container">
+
+    <!-- Nav Sidebar -->
+    <aside class="nav-sidebar">
+      <div class="nav-item active" data-view="graph-view">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        Architecture Tree
+      </div>
+      <div class="nav-item" data-view="memory-view">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        Memory Bank
+      </div>
+      <div class="nav-item" data-view="ingest-view">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Research Ingestion
+      </div>
+      <div class="nav-item" data-view="checkpoints-view">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Checkpoints Timeline
+      </div>
+
+      <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--app-line); display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn" id="btn-run-audit">Run Audit</button>
+        <button class="btn" id="btn-run-lint">Lint Memory</button>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+
+      <!-- View 1: Architecture Tree Graph -->
+      <section class="view-panel active" id="graph-view">
+        <div class="card" style="padding: 16px;">
+          <div class="card-header">
+            <div>
+              <span class="card-title">Interactive Architecture Graph & Checkpoint Flow</span>
+              <p style="font-size: 12px; color: var(--app-ink-muted); margin-top: 2px;">
+                Visual dependency relationships between mission, rules, active context, and checkpoint snapshots.
+              </p>
+            </div>
+            <span class="chip" id="graph-node-count">7 nodes</span>
+          </div>
+
+          <div class="graph-container">
+            <svg id="graph-svg"></svg>
+          </div>
+        </div>
+
+        <div class="card" id="active-focus-card">
+          <div class="card-header">
+            <span class="card-title">Active Focus (<span id="focus-file">activeContext.md</span>)</span>
+            <span class="chip" id="focus-budget-badge">0 / 150 lines</span>
+          </div>
+          <p id="focus-content-text" style="font-size: 13px; color: var(--app-ink-soft);">Loading active context...</p>
+          <div class="budget-meter">
+            <div class="meter-track">
+              <div class="meter-fill" id="focus-meter-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Memory Bank Explorer & Live Editor -->
+      <section class="view-panel" id="memory-view">
+        <div class="card-header" style="border: none; padding-bottom: 0;">
+          <span class="card-title">Memory Bank Files (7 Core Artifacts)</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;" id="memory-cards-grid">
+          <!-- Populated by app.js -->
+        </div>
+      </section>
+
+      <!-- View 3: Research Ingestion -->
+      <section class="view-panel" id="ingest-view">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Research Note Ingestion (Tier-0 SimHash + Diff Review)</span>
+            <span class="chip">Automated Deduplication</span>
+          </div>
+
+          <div class="dropzone" id="ingest-dropzone">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="margin-bottom: 8px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <p style="font-weight: 600; font-size: 14px;">Drag and drop research markdown (.md) here</p>
+            <p style="font-size: 12px; color: var(--app-ink-muted); margin-top: 4px;">or click to select file from your computer</p>
+            <input type="file" id="ingest-file-input" style="display: none;" accept=".md,.txt">
+          </div>
+
+          <div id="ingest-preview-container" style="display: none; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 700; font-size: 13px;">Proposed Diff Preview (<span id="ingest-target-file">productContext.md</span>)</span>
+              <span class="chip clean" id="ingest-dedup-badge">0 duplicates removed</span>
+            </div>
+            <div class="diff-container" id="ingest-diff-viewer"></div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button class="btn" id="btn-cancel-ingest">Cancel</button>
+              <button class="btn primary" id="btn-commit-ingest">Commit to Memory Bank</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 4: Checkpoints Timeline -->
+      <section class="view-panel" id="checkpoints-view">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Checkpoint Snapshot Timeline</span>
+            <button class="btn primary" id="btn-add-checkpoint">+ New Snapshot</button>
+          </div>
+          <div id="checkpoints-list" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Populated by app.js -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal for Checkpoint Creation -->
+  <div class="modal-overlay" id="checkpoint-modal">
+    <div class="modal-box">
+      <div class="card-header">
+        <span class="card-title">Create Safe Checkpoint Snapshot</span>
+        <button class="btn" id="btn-close-modal" style="padding: 2px 8px;">✕</button>
+      </div>
+      <div>
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Active Focus</label>
+        <input type="text" id="ckpt-focus-input" placeholder="What are you working on right now?" style="width: 100%; padding: 8px 10px; border: var(--border-width) solid var(--app-line-strong); border-radius: var(--radius-sm); background: var(--app-surface-sunken); color: var(--app-ink);">
+      </div>
+      <div>
+        <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Out-of-band Manual Notes</label>
+        <textarea id="ckpt-notes-input" rows="3" placeholder="Any manual fixes, dependencies installed, or architectural notes?" style="width: 100%; padding: 8px 10px; border: var(--border-width) solid var(--app-line-strong); border-radius: var(--radius-sm); background: var(--app-surface-sunken); color: var(--app-ink);"></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn" id="btn-modal-cancel">Cancel</button>
+        <button class="btn primary" id="btn-modal-save">Create Snapshot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for File Editing -->
+  <div class="modal-overlay" id="editor-modal">
+    <div class="modal-box" style="width: 800px; height: 80vh;">
+      <div class="card-header">
+        <span class="card-title" id="editor-filename">filename.md</span>
+        <span class="chip" id="editor-budget-indicator">0 lines</span>
+      </div>
+      <textarea id="editor-textarea" style="flex: 1; padding: 12px; font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.4; border: var(--border-width) solid var(--app-line); border-radius: var(--radius-sm); background: var(--app-surface-sunken); color: var(--app-ink); resize: none;"></textarea>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; color: var(--app-ink-muted);" id="editor-status-msg">Atomic write ready</span>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" id="btn-close-editor">Close</button>
+          <button class="btn primary" id="btn-save-file">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

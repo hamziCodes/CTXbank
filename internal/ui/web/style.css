@@ -1,0 +1,467 @@
+/* ==========================================================================
+   VERTEX Universal Design System Tokens & Application Styles (CTXbank)
+   ========================================================================== */
+
+:root {
+  --brand-primary: #042940;
+  --brand-hover: #0b3b5b;
+  --accent-text: #042940;
+  --accent-text-hover: #0b3b5b;
+  --focus-ring: #042940;
+
+  --app-canvas: #f2f6f9;
+  --app-surface: #ffffff;
+  --app-surface-sunken: #e7eef4;
+  --app-surface-hover: rgb(4 41 64 / 0.04);
+  --app-line: #dbe4ec;
+  --app-line-strong: #c2d0dd;
+  --app-ink: #000000;
+  --app-ink-soft: rgb(0 0 0 / 0.64);
+  --app-ink-muted: rgb(0 0 0 / 0.52);
+
+  --positive: #0f6b4f;
+  --positive-soft: #e2f2ec;
+  --negative: #b02a25;
+  --negative-soft: #fbe9e7;
+  --attention: #8a5b00;
+  --attention-soft: #fdf1dc;
+
+  --border-width: 1.5px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-slab: 2px 2px 0 var(--app-line-strong);
+  --shadow-slab-hover: 3px 3px 0 var(--brand-primary);
+  --shadow-slab-pressed: 1px 1px 0 var(--app-line-strong);
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-family: 'Inter Tight', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+html.dark {
+  --brand-primary: #021c2c;
+  --brand-hover: #042940;
+  --accent-text: #609abe;
+  --accent-text-hover: #90bbd5;
+  --focus-ring: #609abe;
+
+  --app-canvas: #0d1117;
+  --app-surface: #161b22;
+  --app-surface-sunken: #090d12;
+  --app-surface-hover: rgb(255 255 255 / 0.04);
+  --app-line: #30363d;
+  --app-line-strong: #484f58;
+  --app-ink: #f0f6fc;
+  --app-ink-soft: #8b949e;
+  --app-ink-muted: #6e7681;
+
+  --positive: #3fb950;
+  --positive-soft: rgb(63 185 80 / 0.15);
+  --negative: #f85149;
+  --negative-soft: rgb(248 81 73 / 0.15);
+  --attention: #d29922;
+  --attention-soft: rgb(210 153 34 / 0.15);
+
+  --shadow-slab: 2px 2px 0 #30363d;
+  --shadow-slab-hover: 3px 3px 0 #609abe;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--app-canvas);
+  color: var(--app-ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Header Chrome */
+header {
+  height: 56px;
+  background-color: var(--app-surface);
+  border-bottom: var(--border-width) solid var(--app-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-badge {
+  background: var(--brand-primary);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--app-line-strong);
+  letter-spacing: 0.5px;
+}
+
+html.dark .logo-badge {
+  color: var(--accent-text);
+  border-color: var(--accent-text);
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--app-line);
+  background-color: var(--app-surface-sunken);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip.clean {
+  border-color: var(--positive);
+  color: var(--positive);
+  background: var(--positive-soft);
+}
+
+.chip.dirty {
+  border-color: var(--negative);
+  color: var(--negative);
+  background: var(--negative-soft);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--app-line-strong);
+  background-color: var(--app-surface);
+  color: var(--app-ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-slab);
+  transition: transform 120ms var(--ease-standard), box-shadow 120ms var(--ease-standard);
+  font-family: inherit;
+}
+
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-slab-hover);
+}
+
+.btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: var(--shadow-slab-pressed);
+}
+
+.btn.primary {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+  border-color: var(--brand-primary);
+}
+
+html.dark .btn.primary {
+  background-color: var(--accent-text);
+  color: #000000;
+  border-color: var(--accent-text);
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Navigation Sidebar */
+aside.nav-sidebar {
+  width: 220px;
+  background-color: var(--app-surface);
+  border-right: var(--border-width) solid var(--app-line);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid transparent;
+  color: var(--app-ink-soft);
+  cursor: pointer;
+  transition: all 120ms var(--ease-standard);
+}
+
+.nav-item:hover {
+  background-color: var(--app-surface-hover);
+  color: var(--app-ink);
+}
+
+.nav-item.active {
+  background-color: var(--app-surface-sunken);
+  color: var(--app-ink);
+  border-color: var(--app-line-strong);
+  box-shadow: var(--shadow-slab);
+}
+
+/* Main Content Area */
+main.main-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px 32px;
+  gap: 20px;
+}
+
+/* Views */
+.view-panel {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.view-panel.active {
+  display: flex;
+}
+
+/* Cards & Containers (VERTEX Solid Objects) */
+.card {
+  background-color: var(--app-surface);
+  border: var(--border-width) solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-slab);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 120ms var(--ease-standard);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-slab-hover);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--app-line);
+  padding-bottom: 10px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+/* Graph Canvas */
+.graph-container {
+  height: 520px;
+  position: relative;
+  background-color: var(--app-surface-sunken);
+  border: var(--border-width) solid var(--app-line-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-slab);
+  overflow: hidden;
+}
+
+svg#graph-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.node-group {
+  cursor: pointer;
+  transition: transform 120ms var(--ease-standard);
+}
+
+.node-group rect {
+  fill: var(--app-surface);
+  stroke: var(--app-line-strong);
+  stroke-width: 1.5;
+  filter: drop-shadow(2px 2px 0 var(--app-line-strong));
+}
+
+.node-group:hover rect {
+  stroke: var(--accent-text);
+  filter: drop-shadow(3px 3px 0 var(--accent-text));
+}
+
+.node-group text.title {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--app-ink);
+}
+
+.node-group text.subtitle {
+  font-size: 10px;
+  font-weight: 500;
+  fill: var(--app-ink-muted);
+}
+
+line.graph-edge {
+  stroke: var(--app-line-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 2;
+}
+
+/* Line Budget Gauge */
+.budget-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+.meter-track {
+  height: 8px;
+  background-color: var(--app-surface-sunken);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background-color: var(--positive);
+  transition: width 200ms var(--ease-standard);
+}
+
+.meter-fill.warning {
+  background-color: var(--attention);
+}
+
+.meter-fill.danger {
+  background-color: var(--negative);
+}
+
+/* Research Drag & Drop Zone */
+.dropzone {
+  border: 2px dashed var(--app-line-strong);
+  border-radius: var(--radius-md);
+  padding: 40px 20px;
+  text-align: center;
+  background-color: var(--app-surface-sunken);
+  cursor: pointer;
+  transition: all 120ms var(--ease-standard);
+}
+
+.dropzone.dragover {
+  border-color: var(--accent-text);
+  background-color: var(--app-surface-hover);
+  box-shadow: var(--shadow-slab);
+}
+
+/* Diff Viewer */
+.diff-container {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  background-color: var(--app-surface-sunken);
+  border: var(--border-width) solid var(--app-line);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-add {
+  color: var(--positive);
+  background: var(--positive-soft);
+}
+
+.diff-del {
+  color: var(--negative);
+  background: var(--negative-soft);
+}
+
+/* 4 Mandatory Container States */
+.state-empty, .state-loading, .state-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  gap: 8px;
+  color: var(--app-ink-soft);
+  font-size: 13px;
+}
+
+.state-loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  width: 600px;
+  max-width: 90vw;
+  background-color: var(--app-surface);
+  border: var(--border-width) solid var(--app-line-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0 var(--app-line-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
