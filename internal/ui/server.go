@@ -53,6 +53,7 @@ func (s *Server) Start(openBrowser bool) error {
 	// API Routes
 	mux.HandleFunc("/api/status", s.handleStatus)
 	mux.HandleFunc("/api/files", s.handleFiles)
+	mux.HandleFunc("/api/file", s.handleFileGet)
 	mux.HandleFunc("/api/file/save", s.handleFileSave)
 	mux.HandleFunc("/api/graph", s.handleGraph)
 	mux.HandleFunc("/api/checkpoints", s.handleCheckpoints)
@@ -62,12 +63,19 @@ func (s *Server) Start(openBrowser bool) error {
 	mux.HandleFunc("/api/ingest/preview", s.handleIngestPreview)
 	mux.HandleFunc("/api/ingest/commit", s.handleIngestCommit)
 
-	// Static Web Assets
-	subFS, err := fs.Sub(embeddedFiles, "web")
-	if err != nil {
-		return fmt.Errorf("failed to locate embedded web directory: %w", err)
+	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
+	var fileSystem http.FileSystem
+	localWebDir := filepath.Join(s.RepoDir, "internal", "ui", "web")
+	if fi, err := os.Stat(localWebDir); err == nil && fi.IsDir() {
+		fileSystem = http.Dir(localWebDir)
+	} else {
+		subFS, err := fs.Sub(embeddedFiles, "web")
+		if err != nil {
+			return fmt.Errorf("failed to locate embedded web directory: %w", err)
+		}
+		fileSystem = http.FS(subFS)
 	}
-	mux.Handle("/", http.FileServer(http.FS(subFS)))
+	mux.Handle("/", http.FileServer(fileSystem))
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", s.Port))
 	if err != nil {
@@ -174,6 +182,27 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, results)
+}
+
+func (s *Server) handleFileGet(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		respondError(w, http.StatusBadRequest, "file name required")
+		return
+	}
+	cleanName := filepath.Base(name)
+	filePath := filepath.Join(s.BankDir, cleanName)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "file not found")
+		return
+	}
+	lines := strings.Split(string(data), "\n")
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"filename": cleanName,
+		"content":  string(data),
+		"lines":    len(lines),
+	})
 }
 
 func (s *Server) handleFileSave(w http.ResponseWriter, r *http.Request) {

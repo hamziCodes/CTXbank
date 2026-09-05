@@ -54,4 +54,22 @@ func TestUIServerAPIRoutes(t *testing.T) {
 	if !ok || len(nodes) < 7 {
 		t.Errorf("expected at least 7 core nodes, got: %v", graphResp)
 	}
+
+	// Test /api/file handler
+	reqFile := httptest.NewRequest(http.MethodGet, "/api/file?name=projectbrief.md", nil)
+	wFile := httptest.NewRecorder()
+	server.handleFileGet(wFile, reqFile)
+
+	if wFile.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/file, got %d", wFile.Code)
+	}
+
+	var fileResp map[string]interface{}
+	if err := json.NewDecoder(wFile.Body).Decode(&fileResp); err != nil {
+		t.Fatalf("failed to decode file response: %v", err)
+	}
+	if fileResp["filename"] != "projectbrief.md" {
+		t.Errorf("expected filename projectbrief.md, got %v", fileResp["filename"])
+	}
 }
+
