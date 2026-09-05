@@ -573,6 +573,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           showToast(`Budget warning: ${data.warning || 'Exceeds budget'}`);
         }
+      } catch (e) {
+        showToast('Lint check failed.');
+      }
+    });
+  }
+
   // 8. Project Selector & Multi-Workspace Manager
   const btnProjectSelector = document.getElementById('btn-project-selector');
   const projectModal = document.getElementById('project-modal');
