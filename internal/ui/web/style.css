@@ -1235,3 +1235,29 @@ html.dark .file-name-title {
   padding: 14px;
   animation: fadeIn 0.2s ease;
 }
+
+/* Uninitialized Project Warning Banner */
+.uninit-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));
+  border: 1.5px solid var(--attention);
+  border-radius: var(--radius-md);
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+  animation: fadeIn 0.25s ease;
+}
+
+.uninit-icon {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--attention-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

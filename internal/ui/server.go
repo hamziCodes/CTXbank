@@ -82,6 +82,7 @@ func (s *Server) Start(openBrowser bool) error {
 	mux.HandleFunc("/api/project/inspect", s.handleProjectInspect)
 	mux.HandleFunc("/api/project/switch", s.handleProjectSwitch)
 	mux.HandleFunc("/api/project/init", s.handleProjectInit)
+	mux.HandleFunc("/api/sync", s.handleSync)
 
 	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
 	var fileSystem http.FileSystem
@@ -127,6 +128,12 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	branch, _ := git.GetCurrentBranch(repoDir)
 	dirtyFiles, _ := git.GetStatus(repoDir)
 
+	manifestPath := filepath.Join(bankDir, core.StateDirname, core.ManifestFilename)
+	hasBank := false
+	if _, err := os.Stat(manifestPath); err == nil {
+		hasBank = true
+	}
+
 	activePath := filepath.Join(bankDir, "activeContext.md")
 	activeFocus := "No active focus declared"
 	idleHours := 0.0
@@ -159,6 +166,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"project_name":  filepath.Base(repoDir),
 		"repo_dir":      repoDir,
 		"branch":        branch,
+		"has_bank":      hasBank,
 		"dirty_count":   len(dirtyFiles),
 		"dirty_files":   dirtyFiles,
 		"active_focus":  activeFocus,
@@ -171,21 +179,26 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 	_, bankDir := s.getPaths()
 	manifest, err := core.LoadManifest(bankDir)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to load manifest")
-		return
-	}
 
 	type FileDetail struct {
 		Name         string `json:"name"`
+		Filename     string `json:"filename"`
 		Volatility   string `json:"volatility"`
 		LineCount    int    `json:"line_count"`
+		Lines        int    `json:"lines"`
 		ByteSize     int64  `json:"byte_size"`
+		Bytes        int64  `json:"bytes"`
 		Content      string `json:"content"`
 		BudgetStatus string `json:"budget_status"`
 	}
 
 	var results []FileDetail
+	if err != nil || manifest == nil {
+		// If manifest doesn't exist yet, return empty list gracefully
+		respondJSON(w, http.StatusOK, results)
+		return
+	}
+
 	for name, meta := range manifest.Files {
 		filePath := filepath.Join(bankDir, name)
 		data, err := os.ReadFile(filePath)
@@ -195,9 +208,12 @@ func (s *Server) handleFiles(w http.ResponseWriter, r *http.Request) {
 		lines := strings.Split(string(data), "\n")
 		results = append(results, FileDetail{
 			Name:         name,
+			Filename:     name,
 			Volatility:   string(meta.Volatility),
 			LineCount:    len(lines),
+			Lines:        len(lines),
 			ByteSize:     meta.Bytes,
+			Bytes:        meta.Bytes,
 			Content:      string(data),
 			BudgetStatus: getBudgetStatus(len(lines)),
 		})
@@ -266,6 +282,7 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	_, bankDir := s.getPaths()
 	type Node struct {
 		ID       string `json:"id"`
+		Name     string `json:"name"`
 		Label    string `json:"label"`
 		Type     string `json:"type"` // core, context, hot, checkpoint
 		Subtitle string `json:"subtitle"`
@@ -280,13 +297,13 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nodes := []Node{
-		{ID: "projectbrief", Label: "projectbrief.md", Type: "core", Subtitle: "Foundation & Scope"},
-		{ID: "productContext", Label: "productContext.md", Type: "context", Subtitle: "UX Goals & Ingested Notes"},
-		{ID: "systemPatterns", Label: "systemPatterns.md", Type: "context", Subtitle: "Architecture & Rules"},
-		{ID: "techContext", Label: "techContext.md", Type: "context", Subtitle: "Stack & Dependencies"},
-		{ID: "activeContext", Label: "activeContext.md", Type: "hot", Subtitle: "Active Focus & Next Steps"},
-		{ID: "progress", Label: "progress.md", Type: "hot", Subtitle: "Milestone Ledger"},
-		{ID: "decisionLog", Label: "decisionLog.md", Type: "core", Subtitle: "Audit & Architecture ADRs"},
+		{ID: "projectbrief", Name: "projectbrief.md", Label: "projectbrief.md", Type: "core", Subtitle: "Foundation & Scope"},
+		{ID: "productContext", Name: "productContext.md", Label: "productContext.md", Type: "context", Subtitle: "UX Goals & Ingested Notes"},
+		{ID: "systemPatterns", Name: "systemPatterns.md", Label: "systemPatterns.md", Type: "context", Subtitle: "Architecture & Rules"},
+		{ID: "techContext", Name: "techContext.md", Label: "techContext.md", Type: "context", Subtitle: "Stack & Dependencies"},
+		{ID: "activeContext", Name: "activeContext.md", Label: "activeContext.md", Type: "hot", Subtitle: "Active Focus & Next Steps"},
+		{ID: "progress", Name: "progress.md", Label: "progress.md", Type: "hot", Subtitle: "Milestone Ledger"},
+		{ID: "decisionLog", Name: "decisionLog.md", Label: "decisionLog.md", Type: "core", Subtitle: "Audit & Architecture ADRs"},
 	}
 
 	// Read line counts
@@ -403,6 +420,35 @@ func (s *Server) handleLint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, res)
+}
+
+func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
+	repoDir, bankDir := s.getPaths()
+	manifestPath := filepath.Join(bankDir, core.StateDirname, core.ManifestFilename)
+	if _, err := os.Stat(manifestPath); err != nil {
+		if err := core.InitBank(repoDir, false); err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to initialize memory bank: "+err.Error())
+			return
+		}
+	}
+
+	report, err := audit.RunAudit(repoDir)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to run reconnaissance audit: "+err.Error())
+		return
+	}
+
+	if err := audit.ApplyAudit(bankDir, report); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to apply audit: "+err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"success":  true,
+		"message":  "Memory bank successfully synchronized with current codebase",
+		"packages": len(report.Components),
+		"symbols":  len(report.Symbols),
+	})
 }
 
 func (s *Server) handleIngestPreview(w http.ResponseWriter, r *http.Request) {

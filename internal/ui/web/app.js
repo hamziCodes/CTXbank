@@ -50,15 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Theme Toggle
   const btnTheme = document.getElementById('btn-theme-toggle');
-  btnTheme.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('ctx_theme', isDark ? 'dark' : 'light');
-    if (currentView === 'graph-view') loadGraph();
-  });
-
-  // Initial Data Load
-  loadStatus();
-  setInterval(loadStatus, 10000);
+  if (btnTheme) {
+    btnTheme.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('ctx_theme', isDark ? 'dark' : 'light');
+      if (currentView === 'graph-view') loadGraph();
+    });
+  }
 
   // Friendly File Roles Dictionary for Non-Tech Users
   const fileDescriptions = {
@@ -71,6 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
     'decisionLog.md': 'Decision History — Why key architectural choices were made (stops circular debates).'
   };
 
+  // Initial Data Load
+  loadStatus();
+  loadFiles();
+  loadGraph();
+  setInterval(loadStatus, 10000);
+
   // 1. Status Loading
   async function loadStatus() {
     try {
@@ -78,29 +82,55 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       // Header Bar
-      document.getElementById('repo-name').textContent = data.project_name || 'Project';
-      document.getElementById('branch-name').textContent = data.branch || 'main';
+      const repoNameEl = document.getElementById('repo-name');
+      if (repoNameEl) repoNameEl.textContent = data.project_name || 'Project';
+
+      const branchNameEl = document.getElementById('branch-name');
+      if (branchNameEl) branchNameEl.textContent = data.branch || 'main';
 
       const gitStatusPill = document.getElementById('git-status-pill');
       const gitStatusText = document.getElementById('git-status-text');
-      if (data.dirty_count > 0) {
-        gitStatusText.textContent = `${data.dirty_count} files modified`;
-        gitStatusPill.className = 'status-pill dirty';
-      } else {
-        gitStatusText.textContent = 'Clean';
-        gitStatusPill.className = 'status-pill clean';
+      if (gitStatusPill && gitStatusText) {
+        if (data.dirty_count > 0) {
+          gitStatusText.textContent = `${data.dirty_count} modified`;
+          gitStatusPill.className = 'status-pill dirty';
+        } else {
+          gitStatusText.textContent = 'Clean';
+          gitStatusPill.className = 'status-pill clean';
+        }
+      }
+
+      // Check if project has memory bank
+      const uninitBanner = document.getElementById('uninit-banner');
+      if (uninitBanner) {
+        if (data.has_bank === false) {
+          uninitBanner.style.display = 'flex';
+          const heroFiles = document.getElementById('hero-files-count');
+          if (heroFiles) heroFiles.textContent = '0';
+        } else {
+          uninitBanner.style.display = 'none';
+          const heroFiles = document.getElementById('hero-files-count');
+          if (heroFiles) heroFiles.textContent = '7';
+        }
       }
 
       // Overview Tab Hero & Metric Cards
-      document.getElementById('overview-focus-text').textContent = data.active_focus || 'Ready for next task.';
-      document.getElementById('overview-branch-val').textContent = data.branch || 'main';
-      document.getElementById('overview-tree-val').textContent = data.dirty_count > 0 ? `${data.dirty_count} modified` : 'Clean';
+      const focusText = document.getElementById('overview-focus-text');
+      if (focusText) focusText.textContent = data.active_focus || 'Ready for next task.';
+
+      const branchVal = document.getElementById('overview-branch-val');
+      if (branchVal) branchVal.textContent = data.branch || 'main';
+
+      const treeVal = document.getElementById('overview-tree-val');
+      if (treeVal) treeVal.textContent = data.dirty_count > 0 ? `${data.dirty_count} modified` : 'Clean';
 
       const budgetLines = data.active_lines || 0;
-      document.getElementById('overview-budget-text').textContent = `${budgetLines} / 150 lines`;
+      const budgetText = document.getElementById('overview-budget-text');
+      if (budgetText) budgetText.textContent = `${budgetLines} / 150 lines`;
 
       const budgetPct = Math.min(100, Math.round((budgetLines / 150) * 100));
-      document.getElementById('hero-budget-pct').textContent = budgetPct + '%';
+      const heroBudget = document.getElementById('hero-budget-pct');
+      if (heroBudget) heroBudget.textContent = budgetPct + '%';
 
       const budgetBar = document.getElementById('overview-budget-bar');
       if (budgetBar) {
@@ -108,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
         budgetBar.className = 'budget-bar ' + (data.budget_status || 'normal');
       }
 
-      // Load snapshot count for hero stat
       fetchCheckpointsCount();
 
     } catch (err) {
@@ -129,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Interactive SVG Architecture Graph
   async function loadGraph() {
     const svg = document.getElementById('graph-svg');
+    if (!svg) return;
     svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="currentColor">Loading architecture tree...</text>';
 
     try {
@@ -144,9 +174,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGraph(nodes, edges) {
     const svg = document.getElementById('graph-svg');
+    if (!svg) return;
     svg.innerHTML = '';
     const width = svg.clientWidth || 700;
     const height = svg.clientHeight || 520;
+
+    if (!nodes || nodes.length === 0) {
+      svg.innerHTML = `
+        <text x="50%" y="45%" text-anchor="middle" fill="currentColor" font-size="14" font-weight="600">No architecture nodes yet</text>
+        <text x="50%" y="55%" text-anchor="middle" fill="gray" font-size="12">Click "Sync Context" or "Create CTXbank" to generate your architecture tree</text>
+      `;
+      return;
+    }
 
     // Node positioning layout
     const coords = {
@@ -161,8 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let ckptOffset = 0;
     nodes.forEach(n => {
+      const nid = n.id || n.ID;
       if (n.type === 'checkpoint') {
-        coords[n.ID] = { x: width * 0.65 + (ckptOffset * 35), y: height * 0.88 };
+        coords[nid] = { x: width * 0.65 + (ckptOffset * 35), y: height * 0.88 };
         ckptOffset++;
       }
     });
@@ -174,10 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const rectFill = isDark ? '#111720' : '#ffffff';
     const rectStroke = isDark ? '#222e3e' : '#e2e8f0';
 
-    // Render Edges (smooth dashed connection lines)
+    // Render Edges
     edges.forEach(edge => {
-      const src = coords[edge.Source];
-      const tgt = coords[edge.Target];
+      const srcId = edge.source || edge.Source;
+      const tgtId = edge.target || edge.Target;
+      const src = coords[srcId];
+      const tgt = coords[tgtId];
       if (!src || !tgt) return;
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -191,9 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
       svg.appendChild(line);
     });
 
-    // Render Nodes (Smooth rounded cards)
+    // Render Nodes
     nodes.forEach(node => {
-      const pos = coords[node.ID] || { x: width * 0.5, y: height * 0.5 };
+      const nodeId = node.id || node.ID;
+      const nodeName = node.name || node.Name || node.label || node.Label || nodeId;
+      const nodeLines = (node.lines !== undefined) ? node.lines : node.Lines;
+      const pos = coords[nodeId] || { x: width * 0.5, y: height * 0.5 };
+
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       group.setAttribute('class', 'node-group');
       group.setAttribute('transform', `translate(${pos.x - 75}, ${pos.y - 26})`);
@@ -204,8 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
       rect.setAttribute('rx', '10');
       rect.setAttribute('ry', '10');
       rect.setAttribute('fill', rectFill);
-      rect.setAttribute('stroke', node.ID === 'activeContext' ? (isDark ? '#609abe' : '#042940') : rectStroke);
-      rect.setAttribute('stroke-width', node.ID === 'activeContext' ? '2' : '1.5');
+      rect.setAttribute('stroke', nodeId === 'activeContext' ? (isDark ? '#609abe' : '#042940') : rectStroke);
+      rect.setAttribute('stroke-width', nodeId === 'activeContext' ? '2' : '1.5');
       group.appendChild(rect);
 
       // Title
@@ -216,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
       text.setAttribute('font-size', '12');
       text.setAttribute('font-weight', '600');
       text.setAttribute('font-family', 'Inter, sans-serif');
-      text.textContent = node.Name || node.ID;
+      text.textContent = nodeName;
       group.appendChild(text);
 
       // Subtitle / Line Count
@@ -226,20 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
       sub.setAttribute('fill', subTextColor);
       sub.setAttribute('font-size', '11');
       sub.setAttribute('font-family', 'JetBrains Mono, monospace');
-      sub.textContent = node.Lines ? `${node.Lines} lines` : (node.type || 'artifact');
+      sub.textContent = nodeLines !== undefined ? `${nodeLines} lines` : (node.type || 'artifact');
       group.appendChild(sub);
 
-      // Click node to open Inspector
-      group.addEventListener('click', () => {
-        inspectNode(node);
-      });
-
+      group.addEventListener('click', () => inspectNode(node));
       svg.appendChild(group);
     });
   }
 
   function inspectNode(node) {
-    const inspector = document.getElementById('node-inspector');
     const nameEl = document.getElementById('inspector-name');
     const typeEl = document.getElementById('inspector-type');
     const descEl = document.getElementById('inspector-desc');
@@ -248,21 +289,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const linesEl = document.getElementById('inspector-lines');
     const btnEdit = document.getElementById('btn-inspector-edit');
 
-    const filename = node.ID + '.md';
-    nameEl.textContent = node.Name || filename;
-    typeEl.textContent = node.type || 'Memory Artifact';
-    descEl.textContent = fileDescriptions[filename] || 'A core architectural artifact tracked by CTXbank.';
+    const nodeId = node.id || node.ID;
+    const nodeName = node.name || node.Name || node.label || node.Label || nodeId;
+    const filename = nodeId.endsWith('.md') ? nodeId : nodeId + '.md';
+    const nodeLines = (node.lines !== undefined) ? node.lines : node.Lines;
 
-    detailsEl.style.display = 'block';
-    pathEl.textContent = `memory-bank/${filename}`;
-    linesEl.textContent = node.Lines ? `${node.Lines} lines` : 'N/A';
+    if (nameEl) nameEl.textContent = nodeName;
+    if (typeEl) typeEl.textContent = node.type || 'Memory Artifact';
+    if (descEl) descEl.textContent = fileDescriptions[filename] || 'A core architectural artifact tracked by CTXbank.';
 
-    btnEdit.onclick = () => openEditor(filename);
+    if (detailsEl) detailsEl.style.display = 'block';
+    if (pathEl) pathEl.textContent = `memory-bank/${filename}`;
+    if (linesEl) linesEl.textContent = nodeLines !== undefined ? `${nodeLines} lines` : 'N/A';
+
+    if (btnEdit) btnEdit.onclick = () => openEditor(filename);
   }
 
   // 3. Memory Bank Grid
   async function loadFiles() {
     const grid = document.getElementById('memory-cards-grid');
+    if (!grid) return;
     grid.innerHTML = '<div class="text-sm text-muted">Loading memory bank files...</div>';
 
     try {
@@ -270,26 +316,42 @@ document.addEventListener('DOMContentLoaded', () => {
       const files = await res.json();
       grid.innerHTML = '';
 
+      if (!files || files.length === 0) {
+        grid.innerHTML = `
+          <div class="card p-6" style="grid-column: 1 / -1; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 8px;">✨</div>
+            <h3 class="font-bold text-sm">No Memory Bank Files Detected</h3>
+            <p class="text-xs text-muted" style="margin: 8px 0 16px;">This project has not been initialized with CTXbank yet. Click below to create your 7 core memory bank files and scan your codebase.</p>
+            <button class="btn btn-primary" id="btn-empty-create-bank">✨ Create Memory Bank & Scan Code</button>
+          </div>
+        `;
+        const btnEmpty = document.getElementById('btn-empty-create-bank');
+        if (btnEmpty) btnEmpty.onclick = () => syncCodebaseContext();
+        return;
+      }
+
       files.forEach(f => {
+        const fname = f.filename || f.name;
+        const lineCount = f.lines !== undefined ? f.lines : (f.line_count || 0);
+        const byteSize = f.bytes !== undefined ? f.bytes : (f.byte_size || 0);
+        const roleDesc = fileDescriptions[fname] || 'Core project knowledge file.';
+        const budgetWarning = (fname === 'activeContext.md' && lineCount >= 150);
+
         const card = document.createElement('div');
         card.className = 'memory-file-card';
-
-        const roleDesc = fileDescriptions[f.filename] || 'Core project knowledge file.';
-        const budgetWarning = (f.filename === 'activeContext.md' && f.lines >= 150);
-
         card.innerHTML = `
           <div class="card-top-row">
-            <span class="file-name-title">${f.filename}</span>
-            <span class="chip ${budgetWarning ? 'dirty' : 'clean'}">${f.lines} lines</span>
+            <span class="file-name-title">${fname}</span>
+            <span class="chip ${budgetWarning ? 'dirty' : 'clean'}">${lineCount} lines</span>
           </div>
           <p class="file-friendly-role">${roleDesc}</p>
           <div class="file-meta-row">
-            <span>Size: ${(f.bytes / 1024).toFixed(1)} KB</span>
+            <span>Size: ${(byteSize / 1024).toFixed(1)} KB</span>
             <span class="font-mono text-xs">Click to edit &rarr;</span>
           </div>
         `;
 
-        card.addEventListener('click', () => openEditor(f.filename));
+        card.addEventListener('click', () => openEditor(fname));
         grid.appendChild(card);
       });
 
@@ -313,37 +375,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function openEditor(filename) {
     activeEditingFile = filename;
-    editorFilename.textContent = filename;
-    editorTextarea.value = 'Loading file contents...';
-    editorModal.classList.add('active');
+    if (editorFilename) editorFilename.textContent = filename;
+    if (editorTextarea) editorTextarea.value = 'Loading file contents...';
+    if (editorModal) editorModal.classList.add('active');
 
     try {
       const res = await fetch(`/api/file?name=${encodeURIComponent(filename)}`);
       const data = await res.json();
-      editorTextarea.value = data.content || '';
+      if (editorTextarea) editorTextarea.value = data.content || '';
       updateEditorBudget();
     } catch (err) {
-      editorTextarea.value = 'Error loading file content.';
+      if (editorTextarea) editorTextarea.value = 'Error loading file content.';
     }
   }
 
   function updateEditorBudget() {
+    if (!editorTextarea || !editorBudget) return;
     const lines = editorTextarea.value.split('\n').length;
     editorBudget.textContent = `${lines} lines`;
     if (activeEditingFile === 'activeContext.md') {
       editorBudget.textContent = `${lines} / 150 lines`;
-      if (lines > 150) {
-        editorBudget.className = 'chip dirty';
-      } else {
-        editorBudget.className = 'chip clean';
-      }
+      editorBudget.className = lines > 150 ? 'chip dirty' : 'chip clean';
     } else {
       editorBudget.className = 'chip';
     }
   }
 
-  editorTextarea.addEventListener('input', updateEditorBudget);
-
+  if (editorTextarea) editorTextarea.addEventListener('input', updateEditorBudget);
   if (btnCloseEditor) btnCloseEditor.addEventListener('click', () => editorModal.classList.remove('active'));
   if (btnCancelEditor) btnCancelEditor.addEventListener('click', () => editorModal.classList.remove('active'));
 
@@ -360,12 +418,12 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ filename: activeEditingFile, content: content })
         });
         const result = await res.json();
-        if (result.success) {
+        if (result.status === 'saved' || result.success) {
           showToast(`Saved ${activeEditingFile} atomically.`);
           editorModal.classList.remove('active');
           loadStatus();
-          if (currentView === 'memory-view') loadFiles();
-          if (currentView === 'graph-view') loadGraph();
+          loadFiles();
+          loadGraph();
         } else {
           showToast('Failed to save file: ' + (result.error || 'unknown'));
         }
@@ -388,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCommitIngest = document.getElementById('btn-commit-ingest');
   let currentRawIngestNote = '';
 
-  if (dropzone) {
+  if (dropzone && fileInput) {
     dropzone.addEventListener('click', () => fileInput.click());
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -424,9 +482,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
 
-      previewContainer.style.display = 'block';
-      diffViewer.textContent = data.diff || '(No new content detected or all duplicate)';
-      dedupBadge.textContent = `${data.duplicate_count || 0} duplicate paragraphs removed`;
+      if (previewContainer) previewContainer.style.display = 'block';
+      if (diffViewer) diffViewer.textContent = data.diff || '(No new content detected or all duplicate)';
+      if (dedupBadge) dedupBadge.textContent = `${data.duplicate_count || 0} duplicate paragraphs removed`;
       showToast('SimHash deduplication completed.');
     } catch (e) {
       showToast('Failed to preview note ingestion.');
@@ -435,8 +493,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnCancelIngest) {
     btnCancelIngest.addEventListener('click', () => {
-      previewContainer.style.display = 'none';
-      diffViewer.textContent = '';
+      if (previewContainer) previewContainer.style.display = 'none';
+      if (diffViewer) diffViewer.textContent = '';
       currentRawIngestNote = '';
     });
   }
@@ -450,10 +508,11 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ content: currentRawIngestNote, target: 'productContext.md' })
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.status === 'committed' || data.success) {
           showToast('Successfully committed note to productContext.md!');
-          previewContainer.style.display = 'none';
+          if (previewContainer) previewContainer.style.display = 'none';
           loadStatus();
+          loadFiles();
         }
       } catch (e) {
         showToast('Failed to commit note.');
@@ -470,8 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAddCheckpoint = document.getElementById('btn-add-checkpoint');
 
   function openCheckpointModal() {
+    if (!ckptModal) return;
     ckptModal.classList.add('active');
-    document.getElementById('ckpt-focus-input').focus();
+    const input = document.getElementById('ckpt-focus-input');
+    if (input) input.focus();
   }
 
   if (btnQuickCheckpoint) btnQuickCheckpoint.addEventListener('click', openCheckpointModal);
@@ -498,8 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ focus: focus, notes: notes })
         });
         const data = await res.json();
-        if (data.success) {
-          showToast(`Snapshot ${data.checkpoint_id} created safely.`);
+        if (data.id || data.ID || data.success) {
+          showToast(`Snapshot created safely.`);
           ckptModal.classList.remove('active');
           document.getElementById('ckpt-focus-input').value = '';
           document.getElementById('ckpt-notes-input').value = '';
@@ -517,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadCheckpoints() {
     const list = document.getElementById('checkpoints-list');
+    if (!list) return;
     list.innerHTML = '<div class="text-sm text-muted">Loading snapshots...</div>';
 
     try {
@@ -547,36 +609,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 7. Audit & Lint Buttons
-  const btnRunAudit = document.getElementById('btn-run-audit');
-  if (btnRunAudit) {
-    btnRunAudit.addEventListener('click', async () => {
-      showToast('Running project audit...');
-      try {
-        const res = await fetch('/api/audit');
-        const data = await res.json();
-        showToast(`Audit complete: ${data.packages || 0} packages, ${data.symbols || 0} symbols found.`);
-      } catch (e) {
-        showToast('Audit failed.');
-      }
-    });
+  // 7. Sync Context & 1-Click Init
+  const btnSyncContext = document.getElementById('btn-sync-context');
+  if (btnSyncContext) {
+    btnSyncContext.addEventListener('click', () => syncCodebaseContext());
   }
 
-  const btnRunLint = document.getElementById('btn-run-lint');
-  if (btnRunLint) {
-    btnRunLint.addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/lint');
-        const data = await res.json();
-        if (data.compliant) {
-          showToast('Memory bank budget check PASSED (all < 150 lines).');
-        } else {
-          showToast(`Budget warning: ${data.warning || 'Exceeds budget'}`);
-        }
-      } catch (e) {
-        showToast('Lint check failed.');
+  const btnCreateBankOverview = document.getElementById('btn-create-bank-overview');
+  if (btnCreateBankOverview) {
+    btnCreateBankOverview.addEventListener('click', () => syncCodebaseContext());
+  }
+
+  async function syncCodebaseContext() {
+    showToast('Syncing codebase with Memory Bank...');
+    try {
+      const res = await fetch('/api/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Synced! Detected ${data.packages || 0} packages and ${data.symbols || 0} symbols.`);
+        loadStatus();
+        loadFiles();
+        loadGraph();
+      } else {
+        showToast('Sync failed: ' + (data.error || 'unknown'));
       }
-    });
+    } catch (e) {
+      showToast('Error syncing context.');
+    }
   }
 
   // 8. Project Selector & Multi-Workspace Manager
@@ -589,23 +648,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputCustomFolderPath = document.getElementById('input-custom-folder-path');
   const folderInspectResult = document.getElementById('folder-inspect-result');
 
-  if (btnProjectSelector) {
+  if (btnProjectSelector && projectModal) {
     btnProjectSelector.addEventListener('click', () => {
       projectModal.classList.add('active');
       loadProjectsModal();
     });
   }
 
-  if (btnCloseProjectModal) btnCloseProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
-  if (btnCancelProjectModal) btnCancelProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+  if (btnCloseProjectModal && projectModal) {
+    btnCloseProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+  }
+  if (btnCancelProjectModal && projectModal) {
+    btnCancelProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
+  }
 
   async function loadProjectsModal() {
+    if (!discoveredProjectsList) return;
     try {
       const res = await fetch('/api/projects');
       const data = await res.json();
 
-      document.getElementById('modal-active-project-name').textContent = data.current_project;
-      document.getElementById('modal-active-project-path').textContent = data.current_path;
+      const activeProjName = document.getElementById('modal-active-project-name');
+      const activeProjPath = document.getElementById('modal-active-project-path');
+      if (activeProjName) activeProjName.textContent = data.current_project;
+      if (activeProjPath) activeProjPath.textContent = data.current_path;
 
       discoveredProjectsList.innerHTML = '';
       const list = data.discovered || [];
@@ -653,13 +719,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (data.success) {
-        projectModal.classList.remove('active');
+        if (projectModal) projectModal.classList.remove('active');
         showToast(`Workspace switched to ${data.name}!`);
         loadStatus();
-        if (currentView === 'overview-view') loadStatus();
-        if (currentView === 'memory-view') loadFiles();
-        if (currentView === 'graph-view') loadGraph();
-        if (currentView === 'checkpoints-view') loadCheckpoints();
+        loadFiles();
+        loadGraph();
+        loadCheckpoints();
       } else {
         showToast('Failed to switch: ' + (data.error || 'unknown'));
       }
@@ -668,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (btnInspectCustomFolder) {
+  if (btnInspectCustomFolder && inputCustomFolderPath && folderInspectResult) {
     btnInspectCustomFolder.addEventListener('click', async () => {
       const path = inputCustomFolderPath.value.trim();
       if (!path) {
@@ -734,13 +799,12 @@ document.addEventListener('DOMContentLoaded', () => {
               });
               const initData = await initRes.json();
               if (initData.success) {
-                projectModal.classList.remove('active');
+                if (projectModal) projectModal.classList.remove('active');
                 showToast(`Project ${initData.name} initialized and scanned!`);
                 loadStatus();
-                if (currentView === 'overview-view') loadStatus();
-                if (currentView === 'memory-view') loadFiles();
-                if (currentView === 'graph-view') loadGraph();
-                if (currentView === 'checkpoints-view') loadCheckpoints();
+                loadFiles();
+                loadGraph();
+                loadCheckpoints();
               } else {
                 showToast('Initialization failed: ' + (initData.error || 'unknown'));
               }
@@ -759,11 +823,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 9. Diagnostics Buttons
+  const btnRunAudit = document.getElementById('btn-run-audit');
+  if (btnRunAudit) {
+    btnRunAudit.addEventListener('click', async () => {
+      showToast('Running project audit...');
+      try {
+        const res = await fetch('/api/audit');
+        const data = await res.json();
+        showToast(`Audit complete: ${data.packages || 0} packages, ${data.symbols || 0} symbols found.`);
+      } catch (e) {
+        showToast('Audit failed.');
+      }
+    });
+  }
 
+  const btnRunLint = document.getElementById('btn-run-lint');
+  if (btnRunLint) {
+    btnRunLint.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/lint');
+        const data = await res.json();
+        if (data.compliant) {
+          showToast('Memory bank budget check PASSED (all < 150 lines).');
+        } else {
+          showToast(`Budget warning: ${data.warning || 'Exceeds budget'}`);
+        }
+      } catch (e) {
+        showToast('Lint check failed.');
+      }
+    });
+  }
 
   // Toast Notification System
   function showToast(message) {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;

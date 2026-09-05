@@ -71,6 +71,14 @@
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
+      <button class="btn btn-secondary" id="btn-sync-context" title="Sync Codebase with Memory Bank">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Sync Context</span>
+      </button>
       <button class="btn btn-primary" id="btn-quick-checkpoint">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -159,6 +167,22 @@
       <!-- ==================== VIEW 1: OVERVIEW (DEFAULT) ==================== -->
       <section class="view-panel active" id="overview-view">
         
+        <!-- Uninitialized Project Prompt Banner -->
+        <div id="uninit-banner" class="uninit-banner" style="display: none;">
+          <div class="flex items-center gap-3">
+            <div class="uninit-icon">✨</div>
+            <div>
+              <div class="font-bold text-sm">Project Needs Memory Bank Initialized</div>
+              <p class="text-xs text-muted" style="margin-top: 2px;">
+                No CTXbank memory bank was detected in this project yet. Click to scan existing code, analyze dependencies, and generate your second brain.
+              </p>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-create-bank-overview" style="white-space: nowrap;">
+            ✨ Create CTXbank & Scan Past Code
+          </button>
+        </div>
+
         <!-- Hero Card -->
         <div class="hero-card">
           <div class="hero-content">
