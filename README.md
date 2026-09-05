@@ -49,13 +49,26 @@ Instead of your AI re-reading hundreds of files on every message, CTXbank acts a
 
 ## Quickstart (Under 60 Seconds)
 
-### Step 1: Download or Build the Binary
-CTXbank is a single, lightweight executable (`ctx.exe` on Windows, or `ctx` on Mac/Linux) with zero dependencies. No Node.js, no Python runtime, no Docker required.
+### Step 1: Install CTXbank
 
-```bash
-# Build with Go (if building from source)
-go build -o ./bin/ctx.exe ./cmd/ctx
+Choose the easiest install method for your system:
+
+#### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.ps1 | iex
 ```
+
+#### macOS & Linux (Terminal)
+```bash
+curl -fsSL https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.sh | sh
+```
+
+#### Go Developers
+```bash
+go install github.com/hamziCodes/CTXbank/cmd/ctx@latest
+```
+
+*(Or download the standalone `.zip` / `.tar.gz` for your OS directly from [GitHub Releases](https://github.com/hamziCodes/CTXbank/releases)).*
 
 ### Step 2: Initialize Your Project
 Open a terminal in your project root and run:

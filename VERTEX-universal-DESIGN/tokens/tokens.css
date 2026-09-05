@@ -1,0 +1,559 @@
+/* ==========================================================================
+   VERTEX Universal Design — Token Core
+   --------------------------------------------------------------------------
+   Framework-neutral. Plain CSS custom properties, no build step, no Tailwind.
+   Works in Next.js, Vite, CRA, Astro, plain HTML, CSS Modules, styled-components.
+
+   INSTALL — pick exactly one path, never two.
+
+     Tailwind v4:
+       @import "tailwindcss";
+       @import ".../tokens/tokens.css";
+       @import ".../tokens/tailwind-v4.css";
+
+     Tailwind v3:
+       Import this file in the global stylesheet, then add
+       tailwind-v3.cjs to `presets` in tailwind.config.js.
+
+     Plain CSS / CSS Modules / CSS-in-JS:
+       Import this file only. Reference var(--token) directly.
+
+     Non-web (native, email, Figma, slides):
+       Read tokens.json. Do not hand-transcribe values.
+
+   RULES
+     1. Never hardcode a colour, radius, shadow or duration in a component.
+     2. A new token is added HERE, in both modes, then mirrored into
+        tokens.ts and tokens.json. Never a one-off hex in a component.
+     3. Light and dark are both required. Dark activates on `html.dark`.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. LIGHT MODE — the default
+   ========================================================================== */
+
+:root {
+  /* ---------- Brand: one accent family, navy ----------------------------- */
+  --brand-primary: #042940; /* FILL token */
+  --brand-hover: #0b3b5b;
+  --cta: #042940;
+  --cta-hover: #0b3b5b;
+  --cta-foreground: #ffffff;
+
+  /* Accent TEXT and focus rings are a separate token. --brand-primary
+     measures 2.2:1 on the dark canvas and fails, so it must never be text
+     there. These two are safe in both modes. */
+  --accent-text: #042940; /* 15.0:1 on #ffffff */
+  --accent-text-hover: #0b3b5b;
+  --focus-ring: #042940;
+
+  /* Optional per-product identity tint. Defaults to brand. Permitted only on
+     the product chip and nav mark, under ~40x40px. Requires a deviation
+     register entry. Never on CTAs, links, focus, charts, text or large fills. */
+  --product-signal: var(--brand-primary);
+
+  /* ---------- Navy ramp: hue locked 203-205 ------------------------------ */
+  --navy-50: #eff6fb;
+  --navy-100: #dbebf5;
+  --navy-200: #bad6e8;
+  --navy-300: #90bbd5;
+  --navy-400: #609abe;
+  --navy-500: #236798;
+  --navy-600: #1a537c;
+  --navy-700: #0b3b5b;
+  --navy-800: #042940;
+  --navy-900: #021c2c;
+  --navy-950: #01111b;
+
+  /* ---------- Marketing canvas ------------------------------------------ */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --muted: #000000; /* literally black — de-emphasise with alpha in light mode */
+  --border: rgb(0 0 0 / 0.08);
+  --button-secondary: #000000;
+  --surface-dark: #000000;
+  --surface-hover: rgb(0 0 0 / 0.04);
+
+  /* ---------- Application canvas ---------------------------------------- */
+  --app-canvas: #f2f6f9;
+  --app-surface: #ffffff;
+  --app-surface-sunken: #e7eef4;
+  --app-surface-inverse: #042940;
+  --app-surface-hover: rgb(4 41 64 / 0.04);
+  --app-on-inverse: #ffffff;
+  --app-line: #dbe4ec;
+  --app-line-strong: #c2d0dd;
+  --app-line-inverse: rgb(255 255 255 / 0.18);
+  --app-ink: #000000;
+  --app-ink-soft: rgb(0 0 0 / 0.64);
+  --app-ink-muted: rgb(0 0 0 / 0.52);
+
+  /* ---------- Footer chrome: charcoal in both modes, never flips --------- */
+  --footer-bg: #161719;
+  --footer-elevated: #212326;
+  --footer-foreground: #f3f4f6;
+  --footer-muted: #9ca3af;
+  --footer-border: #2e3238;
+
+  /* ---------- Semantic -------------------------------------------------- */
+  --positive: #0f6b4f;
+  --positive-soft: #e2f2ec;
+  --positive-line: #bfdfd2;
+  --negative: #b02a25;
+  --negative-soft: #fbe9e7;
+  --negative-line: #f0cdc8;
+  --attention: #8a5b00;
+  --attention-soft: #fdf1dc;
+  --attention-line: #eed9b0;
+  --info: #042940;
+  --info-soft: #eff6fb;
+  --info-line: #cbdeeb;
+
+  /* ---------- Depth: hard, zero-blur offsets ---------------------------- */
+  --app-shadow-color: #dce5ec;
+  --app-shadow-color-strong: #b9c8d5;
+  --shadow-slab: 3px 4px 0 var(--app-shadow-color);
+  --shadow-slab-strong: 3px 4px 0 var(--app-shadow-color-strong);
+  --shadow-slab-pressed: 1px 2px 0 var(--app-shadow-color-strong);
+  --shadow-sheet: 0 -5px 20px rgb(4 41 64 / 0.12); /* the only blurred shadow */
+  --scrim: rgb(4 41 64 / 0.38);
+
+  /* ---------- Typeface -------------------------------------------------- */
+  --font-sans:
+    var(--font-inter-tight), "Inter Tight", "Inter", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  /* Monospace is permitted ONLY for code, logs, IDs and diffs. Never UI chrome. */
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ---------- Radius ---------------------------------------------------- */
+  --radius-control: 12px;
+  --radius-slab: 18px;
+  --radius-panel: 24px;
+  --radius-sheet: 28px;
+  --radius-pill: 9999px;
+  --radius-marketing: 60px; /* overridden fluid at lg, see section 3 */
+
+  /* ---------- Layout ---------------------------------------------------- */
+  --page-max: 1440px;
+  --app-max: 740px;
+  --prose-max: 720px;
+  --nav-height: 72px;
+  --bottom-nav-height: 70px;
+  --sidebar-width: 264px;
+  --sidebar-width-collapsed: 72px;
+  --page-pad: 24px;
+  --page-gutter: 24px;
+  --page-inset: 24px;
+  --page-panel: 24px;
+  --nav-link-gap: 1.25rem;
+
+  /* ---------- Type scale ------------------------------------------------ */
+  --fs-display: clamp(4.25rem, 18vw, 17.525rem);
+  --fs-hero: clamp(3rem, 5.56vw, 5rem);
+  --fs-title: clamp(2rem, 3.61vw, 3.25rem);
+  --fs-lead: clamp(1.125rem, 1.67vw, 1.5rem);
+  --fs-menu: 3rem;
+
+  /* ---------- Motion: one curve, never mixed ---------------------------- */
+  --ease-vertex: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 200ms;
+  --dur-swap: 320ms;
+  --dur-panel: 450ms;
+  --dur-reveal: 800ms;
+  --dur-hero: 950ms;
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   2. DARK MODE — activated by `html.dark`
+   ========================================================================== */
+
+html.dark {
+  --brand-primary: #1a537c; /* FILL only — 2.2:1 as text here, never text */
+  --brand-hover: #236798;
+  --cta: #1a537c;
+  --cta-hover: #236798;
+  --cta-foreground: #ffffff;
+
+  --accent-text: #609abe; /* 5.8:1 on #161719 */
+  --accent-text-hover: #90bbd5; /* 8.8:1 on #161719 */
+  --focus-ring: #609abe;
+
+  --background: #161719; /* charcoal, never pure black */
+  --foreground: #f3f4f6;
+  --card: #212326;
+  --muted: #9ca3af;
+  --border: #2e3238;
+  --button-secondary: #2d3035;
+  --surface-dark: #212326;
+  --surface-hover: #2d3035;
+
+  --app-canvas: #161719;
+  --app-surface: #212326;
+  --app-surface-sunken: #101113;
+  --app-surface-inverse: #f3f4f6;
+  --app-surface-hover: #2d3035;
+  --app-on-inverse: #161719;
+  --app-line: #2e3238;
+  --app-line-strong: #3d434b;
+  --app-line-inverse: rgb(22 23 25 / 0.18);
+  --app-ink: #f3f4f6;
+  --app-ink-soft: rgb(243 244 246 / 0.72);
+  --app-ink-muted: #9ca3af;
+
+  --positive: #3fae86;
+  --positive-soft: rgb(63 174 134 / 0.16);
+  --positive-line: rgb(63 174 134 / 0.34);
+  --negative: #f0766a;
+  --negative-soft: rgb(240 118 106 / 0.16);
+  --negative-line: rgb(240 118 106 / 0.34);
+  --attention: #e0a94a;
+  --attention-soft: rgb(224 169 74 / 0.16);
+  --attention-line: rgb(224 169 74 / 0.34);
+  --info: #609abe;
+  --info-soft: rgb(96 154 190 / 0.16);
+  --info-line: rgb(96 154 190 / 0.34);
+
+  --app-shadow-color: #0d0e10;
+  --app-shadow-color-strong: #08090a;
+  --shadow-sheet: 0 -5px 20px rgb(0 0 0 / 0.45);
+  --scrim: rgb(0 0 0 / 0.58);
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   3. RESPONSIVE LAYOUT
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  :root {
+    --page-pad: 32px;
+    --page-gutter: 32px;
+    --page-inset: 32px;
+    --page-panel: 32px;
+    --fs-menu: 3.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-pad: clamp(24px, 2.778vw, 40px);
+    --page-gutter: clamp(24px, 2.778vw, 40px);
+    --page-inset: clamp(64px, 11.111vw, 160px);
+    --page-panel: clamp(48px, 9.444vw, 136px);
+    --nav-link-gap: clamp(1rem, 1.94vw, 1.75rem);
+    --radius-marketing: clamp(40px, 4.167vw, 60px);
+  }
+}
+
+/* ==========================================================================
+   4. DENSITY
+   --------------------------------------------------------------------------
+   Set on any container: <div data-density="compact">. Nests freely — a dense
+   table inside a comfortable page is valid and common.
+
+   Components read these variables instead of hardcoding heights and padding,
+   which is what lets one component library serve a marketing page and an
+   admin console without forking.
+   ========================================================================== */
+
+:root,
+[data-density="comfortable"] {
+  --control-h: 48px;
+  --control-pad-x: 20px;
+  --control-gap: 8px;
+  --slab-pad: 24px;
+  --slab-pad-sm: 16px;
+  --stack-gap: 18px;
+  --row-pad-y: 12px;
+  --row-gap: 12px;
+  --field-gap: 20px;
+  --icon-tile: 36px;
+  --text-body: 15px;
+  --text-row: 15px;
+  --text-detail: 13px;
+}
+
+[data-density="compact"] {
+  --control-h: 40px;
+  --control-pad-x: 16px;
+  --control-gap: 6px;
+  --slab-pad: 18px;
+  --slab-pad-sm: 14px;
+  --stack-gap: 14px;
+  --row-pad-y: 10px;
+  --row-gap: 8px;
+  --field-gap: 16px;
+  --icon-tile: 32px;
+  --text-body: 14px;
+  --text-row: 14px;
+  --text-detail: 12px;
+}
+
+[data-density="dense"] {
+  --control-h: 34px;
+  --control-pad-x: 12px;
+  --control-gap: 4px;
+  --slab-pad: 14px;
+  --slab-pad-sm: 10px;
+  --stack-gap: 10px;
+  --row-pad-y: 7px;
+  --row-gap: 4px;
+  --field-gap: 12px;
+  --icon-tile: 28px;
+  --text-body: 13px;
+  --text-row: 13px;
+  --text-detail: 12px;
+}
+
+/* Touch floor. `compact` and `dense` are pointer-precise contexts; on a
+   touch device they clamp back to the 44px accessibility minimum. This is
+   why a dense console remains usable when someone opens it on a tablet. */
+@media (pointer: coarse) {
+  [data-density="compact"],
+  [data-density="dense"] {
+    --control-h: 44px;
+    --row-pad-y: 12px;
+  }
+}
+
+/* ==========================================================================
+   5. SURFACE ARCHETYPES
+   --------------------------------------------------------------------------
+   Set once on the outermost element of a surface:
+     <body data-vertex-surface="marketing">
+     <div data-vertex-surface="dashboard" data-density="compact">
+   Selects the canvas. Radius, navigation and motion are chosen in code —
+   see spec/SURFACES.md.
+   ========================================================================== */
+
+[data-vertex-surface="marketing"] {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+[data-vertex-surface="dashboard"],
+[data-vertex-surface="mobile-app"],
+[data-vertex-surface="form-flow"],
+[data-vertex-surface="console"] {
+  background: var(--app-canvas);
+  color: var(--app-ink);
+}
+
+/* ==========================================================================
+   6. BASE
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  background-color: var(--background);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: 500; /* Inter Tight at 400 reads thin on these surfaces */
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* Inputs must be >=16px on mobile or iOS Safari zooms on focus. */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 16px;
+}
+
+code,
+pre,
+samp,
+kbd,
+[data-numeric="id"] {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--accent-text);
+  color: var(--cta-foreground);
+}
+
+/* ==========================================================================
+   7. UTILITY CLASSES
+   --------------------------------------------------------------------------
+   For projects without Tailwind, and for the handful of patterns that are
+   clearer as one class than as eight utilities.
+   ========================================================================== */
+
+/* Uppercase micro-label above a heading. */
+.vx-eyebrow {
+  color: var(--app-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+/* Parenthetical section kicker — the marketing signature, e.g. (HOW WE WORK) */
+.vx-kicker {
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Every money and metric figure, on every surface. Keeps columns aligned and
+   stops a changing value from reflowing its row. */
+.vx-money,
+.vx-tabular {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.vx-money-in {
+  color: var(--positive);
+}
+
+.vx-money-out {
+  color: var(--negative);
+}
+
+/* Solid surface, crisp outline, hard offset shadow. The core material. */
+.vx-slab {
+  background: var(--app-surface);
+  border: 1.5px solid var(--app-line-strong);
+  border-radius: var(--radius-slab);
+  box-shadow: var(--shadow-slab);
+  padding: var(--slab-pad);
+}
+
+.vx-slab-brand {
+  background: var(--brand-primary);
+  border: 0;
+  border-radius: var(--radius-panel);
+  box-shadow: none; /* the offset shadow is invisible on navy */
+  color: #ffffff;
+  padding: var(--slab-pad);
+}
+
+.vx-slab-inverse {
+  background: var(--app-surface-inverse);
+  border: 0;
+  border-radius: var(--radius-panel);
+  color: var(--app-on-inverse);
+  padding: var(--slab-pad);
+}
+
+.vx-slab-attention {
+  background: var(--attention-soft);
+  border: 1.5px solid var(--attention-line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-slab);
+  color: var(--app-ink);
+  padding: var(--slab-pad);
+}
+
+/* Physical press: the element travels into its own shadow. */
+.vx-press {
+  transition:
+    transform var(--dur-micro) var(--ease-vertex),
+    box-shadow var(--dur-micro) var(--ease-vertex);
+}
+
+.vx-press:active {
+  box-shadow: var(--shadow-slab-pressed);
+  transform: translate(2px, 2px);
+}
+
+.vx-focus:focus-visible,
+.vx-control:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Density-aware control shell for non-Tailwind projects. */
+.vx-control {
+  align-items: center;
+  border-radius: var(--radius-control);
+  display: inline-flex;
+  font-size: var(--text-body);
+  font-weight: 700;
+  gap: var(--control-gap);
+  justify-content: center;
+  min-height: var(--control-h);
+  padding-inline: var(--control-pad-x);
+}
+
+.vx-sr-only {
+  border: 0;
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* ==========================================================================
+   8. REDUCED MOTION — one global fallback, no per-component exceptions
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .vx-press,
+  .vx-press:active {
+    transform: none;
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   9. FORCED COLORS — Windows high-contrast mode
+   ========================================================================== */
+
+@media (forced-colors: active) {
+  .vx-slab,
+  .vx-slab-brand,
+  .vx-slab-inverse,
+  .vx-slab-attention {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .vx-focus:focus-visible,
+  .vx-control:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

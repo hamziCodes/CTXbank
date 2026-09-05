@@ -1,0 +1,48 @@
+---
+description: VERTEX Universal Design system — governs all UI, colour, type, depth, motion and copy decisions
+alwaysApply: true
+---
+
+# VERTEX Universal Design — always in force
+
+This repository's UI is governed by the VERTEX Universal Design toolkit. Before writing or changing any interface code, read `VERTEX-universal-DESIGN/AGENTS.md` and `VERTEX-universal-DESIGN/project-profile.md`.
+
+> Adjust the paths above if the toolkit sits elsewhere in this repository.
+
+## Load order
+
+1. `VERTEX-universal-DESIGN/AGENTS.md` — the contract and the adaptation procedure
+2. `VERTEX-universal-DESIGN/project-profile.md` — what this project already decided
+3. `VERTEX-universal-DESIGN/spec/SURFACES.md` — which archetype you are building
+4. `VERTEX-universal-DESIGN/spec/DESIGN.md` — any visual decision
+5. `VERTEX-universal-DESIGN/spec/PRE-SHIP.md` — before reporting anything finished
+
+Precedence: the project's live CSS beats `tokens/tokens.css`, which beats `tokens.ts` and `tokens.json`, which beat the prose in `spec/`.
+
+## Non-negotiable
+
+- **One accent, navy.** `var(--brand-primary)` for fills. `var(--accent-text)` for text and focus rings, because `#1a537c` on the `#161719` dark canvas is 2.2:1 and fails WCAG. Never a second accent, never cobalt `#2B5EF5`, never orange or purple.
+- **Never hardcode** a colour, radius, shadow or duration. Bind to a token. A missing token is added to `tokens/tokens.css` in both modes, then mirrored into `tokens.ts` and `tokens.json`.
+- **Light and dark are both required** before any surface ships. Dark is charcoal `#161719`, never pure black, and must not flash on first paint.
+- **Solid surfaces with edges.** 1.5px `--app-line-strong` outline, hard zero-blur `--shadow-slab`. No gradients. No glassmorphism as a card material — `backdrop-blur` is permitted only on fixed navigation chrome and sticky kickers at ≥80% opacity. `--shadow-sheet` is the only blurred shadow in the system.
+- **Inter Tight only**, at 900 / 700 / 500 / 300. Body copy is 500, not 400. Monospace only for code, logs, IDs and diffs.
+- **One easing curve:** `cubic-bezier(0.16, 1, 0.3, 1)`. Travel 16–32px. One animated element per viewport. Never re-animate on a state change. `prefers-reduced-motion` honoured everywhere.
+- **Every list, table and panel** declares ready, empty, loading and error before it ships. Never a blank container.
+- **WCAG AA.** Visible `focus-visible` ring, 44px minimum targets, colour never the only signal, correct `aria-*` state.
+- **Money** goes through one `formatMoney()` helper, always `tabular-nums`, with direction carried by a sign plus a colour.
+- **Never invent facts** — no placeholder reviews, logos, SLAs, metrics, entities or addresses.
+- **Copy:** sentence case, no Oxford comma, numerals always, contextual CTAs. Banned words: `leverage`, `synergy`, `seamless`, `revolutionize`, `cutting-edge`, `state-of-the-art`, `game-changing`, `next-gen`, `world-class`.
+
+## What adapts
+
+Tokens never change. Composition always does. The surface archetype — `marketing`, `dashboard`, `mobile-app`, `form-flow`, `console` — sets the canvas, radius ceiling, density, navigation, motion budget and permitted components. Read `spec/SURFACES.md` and pick one before writing layout.
+
+Density is set with `data-density="comfortable | compact | dense"` and nests freely. Components read `var(--control-h)`, `var(--slab-pad)`, `var(--stack-gap)` and friends rather than hardcoding sizes.
+
+## Deviations
+
+If this project genuinely must depart from the spec, record it in the deviation register in `project-profile.md` with a reason, a scope and a review date. An undocumented deviation is drift. These are never deviations, only violations: a second accent, a single-theme surface, `--brand-primary` as text on dark, a removed focus indicator, a missing empty/loading/error state, invented facts, banned words.
+
+## Reporting
+
+Walk `spec/PRE-SHIP.md` before calling UI work done, and state which items you verified and how. "Looks right" is not verification. An accurate partial report beats an inflated complete one.

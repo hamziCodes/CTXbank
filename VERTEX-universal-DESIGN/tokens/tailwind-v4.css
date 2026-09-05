@@ -1,0 +1,144 @@
+/* ==========================================================================
+   VERTEX Universal Design — Tailwind v4 adapter
+   --------------------------------------------------------------------------
+   Maps the token core onto Tailwind utilities. Import AFTER tokens.css:
+
+     @import "tailwindcss";
+     @import ".../tokens/tokens.css";
+     @import ".../tokens/tailwind-v4.css";
+
+   Tailwind v3 projects use tailwind-v3.cjs instead.
+   Projects without Tailwind skip this file entirely.
+   ========================================================================== */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  /* ---------- Brand ------------------------------------------------------ */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-hover: var(--brand-hover);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-foreground: var(--cta-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-accent-text-hover: var(--accent-text-hover);
+  --color-focus-ring: var(--focus-ring);
+  --color-product-signal: var(--product-signal);
+
+  /* ---------- Navy ramp -------------------------------------------------- */
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+
+  /* ---------- Marketing canvas ------------------------------------------ */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-button-secondary: var(--button-secondary);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-hover: var(--surface-hover);
+
+  /* ---------- Application canvas ---------------------------------------- */
+  --color-app-canvas: var(--app-canvas);
+  --color-app-surface: var(--app-surface);
+  --color-app-surface-sunken: var(--app-surface-sunken);
+  --color-app-surface-inverse: var(--app-surface-inverse);
+  --color-app-surface-hover: var(--app-surface-hover);
+  --color-app-on-inverse: var(--app-on-inverse);
+  --color-app-line: var(--app-line);
+  --color-app-line-strong: var(--app-line-strong);
+  --color-app-line-inverse: var(--app-line-inverse);
+  --color-app-ink: var(--app-ink);
+  --color-app-ink-soft: var(--app-ink-soft);
+  --color-app-ink-muted: var(--app-ink-muted);
+
+  /* ---------- Footer chrome --------------------------------------------- */
+  --color-footer: var(--footer-bg);
+  --color-footer-elevated: var(--footer-elevated);
+  --color-footer-foreground: var(--footer-foreground);
+  --color-footer-muted: var(--footer-muted);
+  --color-footer-border: var(--footer-border);
+
+  /* ---------- Semantic -------------------------------------------------- */
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-positive-line: var(--positive-line);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-negative-line: var(--negative-line);
+  --color-attention: var(--attention);
+  --color-attention-soft: var(--attention-soft);
+  --color-attention-line: var(--attention-line);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+  --color-scrim: var(--scrim);
+
+  /* ---------- Type ------------------------------------------------------ */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --text-display: var(--fs-display);
+  --text-hero: var(--fs-hero);
+  --text-title: var(--fs-title);
+  --text-lead: var(--fs-lead);
+  --text-menu: var(--fs-menu);
+
+  /* ---------- Radius ---------------------------------------------------- */
+  --radius-control: var(--radius-control);
+  --radius-slab: var(--radius-slab);
+  --radius-panel: var(--radius-panel);
+  --radius-sheet: var(--radius-sheet);
+  --radius-card: var(--radius-marketing);
+
+  /* ---------- Shadow ---------------------------------------------------- */
+  --shadow-slab: var(--shadow-slab);
+  --shadow-slab-strong: var(--shadow-slab-strong);
+  --shadow-slab-pressed: var(--shadow-slab-pressed);
+  --shadow-sheet: var(--shadow-sheet);
+
+  /* ---------- Spacing and layout ---------------------------------------- */
+  --spacing-page: var(--page-pad);
+  --spacing-gutter: var(--page-gutter);
+  --spacing-inset: var(--page-inset);
+  --spacing-panel: var(--page-panel);
+  --spacing-nav: var(--nav-height);
+  --spacing-bottom-nav: var(--bottom-nav-height);
+  --spacing-control: var(--control-h);
+  --spacing-slab-pad: var(--slab-pad);
+  --spacing-stack: var(--stack-gap);
+  --max-width-page: var(--page-max);
+  --max-width-app: var(--app-max);
+  --max-width-prose-vx: var(--prose-max);
+  --width-sidebar: var(--sidebar-width);
+
+  /* ---------- Motion ---------------------------------------------------- */
+  --ease-vertex: var(--ease-vertex);
+}
+
+/* --------------------------------------------------------------------------
+   Cheat sheet — the utilities this unlocks
+
+   Colour    bg-brand-primary  text-accent-text  border-app-line-strong
+             bg-app-surface  text-app-ink-muted  bg-positive-soft
+             text-negative  bg-surface-dark  text-footer-muted  bg-scrim
+   Shape     rounded-control  rounded-slab  rounded-panel  rounded-t-sheet
+             rounded-card (marketing only)
+   Depth     shadow-slab  shadow-slab-strong  shadow-slab-pressed  shadow-sheet
+   Type      text-display  text-hero  text-title  text-lead  text-menu
+             font-sans  font-mono
+   Layout    px-page  px-inset  px-panel  h-nav  pb-bottom-nav
+             max-w-page  max-w-app  w-sidebar
+   Motion    ease-vertex  duration-200
+   Density   min-h-[var(--control-h)]  px-[var(--control-pad-x)]
+             p-[var(--slab-pad)]  gap-[var(--stack-gap)]
+   -------------------------------------------------------------------------- */
