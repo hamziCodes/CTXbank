@@ -1,0 +1,126 @@
+{
+  "name": "ctxbank",
+  "displayName": "CTXbank — Deterministic Memory Bank",
+  "description": "Deterministic memory bank, crash-safe checkpoint engine, and visual architecture tree for AI coding assistants.",
+  "version": "0.1.0",
+  "publisher": "hamziCodes",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "memory-bank",
+    "context",
+    "ai",
+    "cline",
+    "cursor",
+    "checkpoints"
+  ],
+  "main": "./out/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hamziCodes/CTXbank.git"
+  },
+  "activationEvents": [
+    "workspaceContains:memory-bank"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ctxbank-view-container",
+          "title": "CTXbank",
+          "icon": "media/ctx-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ctxbank-view-container": [
+        {
+          "id": "ctxbank-focus",
+          "name": "Active Focus & Health"
+        },
+        {
+          "id": "ctxbank-files",
+          "name": "Memory Bank Explorer"
+        },
+        {
+          "id": "ctxbank-checkpoints",
+          "name": "Checkpoint History"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "ctxbank.openDashboard",
+        "title": "CTXbank: Open Visual Architecture Tree",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "ctxbank.createCheckpoint",
+        "title": "CTXbank: Save Checkpoint Snapshot",
+        "icon": "$(diff-added)"
+      },
+      {
+        "command": "ctxbank.pause",
+        "title": "CTXbank: Pause Session & Log Notes",
+        "icon": "$(debug-pause)"
+      },
+      {
+        "command": "ctxbank.resume",
+        "title": "CTXbank: Resume Session Brief",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ctxbank.runAudit",
+        "title": "CTXbank: Run Reconnaissance Audit",
+        "icon": "$(search)"
+      },
+      {
+        "command": "ctxbank.lintMemory",
+        "title": "CTXbank: Check Memory Budgets (<150 lines)",
+        "icon": "$(pass)"
+      },
+      {
+        "command": "ctxbank.refresh",
+        "title": "CTXbank: Refresh State",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "ctxbank.createCheckpoint",
+          "when": "view == ctxbank-focus",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ctxbank.openDashboard",
+          "when": "view == ctxbank-focus",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ctxbank.refresh",
+          "when": "view == ctxbank-focus",
+          "group": "navigation@3"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.2",
+    "typescript": "^5.3.3"
+  }
+}

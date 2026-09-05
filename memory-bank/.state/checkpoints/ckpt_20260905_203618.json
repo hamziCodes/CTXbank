@@ -1,0 +1,40 @@
+{
+  "id": "ckpt_20260905_203618",
+  "timestamp": "2026-09-05T20:36:18.0017238Z",
+  "branch": "main",
+  "head_commit": "a6a11e47a293bd13967d7fac2d470e90c1dca155",
+  "commit_message": "feat(ui): implement embedded interactive VERTEX web dashboard (ctx ui)",
+  "dirty_files": [
+    {
+      "path": ".gitignore",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "README.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/activeContext.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/progress.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "extensions/",
+      "staging_status": "?",
+      "worktree_status": "?"
+    }
+  ],
+  "diff_stat": ".gitignore                   |  5 +++++\n README.md                    | 34 ++++++++++++++++++++++++++++++++++\n memory-bank/activeContext.md | 19 ++++++++++---------\n memory-bank/progress.md      |  5 +++++\n 4 files changed, 54 insertions(+), 9 deletions(-)",
+  "active_focus": "Manual Pause Checkpoint",
+  "next_steps": null,
+  "manual_edits": [
+    "Completed Multi-Track Expansion (Release, Web UI, VS Code Extension)"
+  ]
+}

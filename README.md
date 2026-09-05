@@ -90,6 +90,7 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 
 | Command | What it does |
 |---|---|
+| `ctx ui` (or `ctx dashboard`) | Launches the embedded VERTEX web dashboard with interactive architecture graphs. |
 | `ctx status` | Shows a clean terminal card with your git branch, dirty files, and current focus. |
 | `ctx pause` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
 | `ctx resume` | Prints an instant summary of what you were working on so you can pick up immediately. |
@@ -98,6 +99,39 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 | `ctx list` | Shows a dashboard of all your active CTXbank projects across your computer. |
 | `ctx lint-memory` | Checks that your memory bank files aren't bloated (keeps activeContext under 150 lines). |
 | `ctx serve --mcp` | Starts the background server so AI tools can talk to CTXbank directly. |
+
+---
+
+## Interactive Visual Interfaces
+
+CTXbank offers two rich, zero-learning-curve visual interfaces built to the high-precision **VERTEX Universal Design System**:
+
+### 1. Embedded Web Dashboard (`ctx ui`)
+Run a single command in your terminal:
+```bash
+ctx ui
+```
+This instantly boots an embedded local web dashboard (served directly from the static binary on `http://localhost:4242`) with:
+- **Interactive SVG Architecture Graph:** Clickable nodes representing core components, test suites, and memory files with live line counts and status rings.
+- **Visual Memory Cards:** Live preview and tabbed editor for all 7 memory bank files with real-time budget meter warning before hitting line limits.
+- **Drag-and-Drop Ingestion:** Drop meeting notes, markdown brainstorms, or research documents into the browser to auto-deduplicate (SimHash) and merge into memory files.
+- **Checkpoint Manager:** 1-click snapshot creation, rollback preview, and branch audit timeline.
+
+### 2. Native VS Code & Cursor Extension
+Install the official extension directly in VS Code or Cursor:
+```bash
+code --install-extension https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
+```
+*(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`).*
+
+**Features inside your IDE:**
+- **Activity Bar Sidebar:** Dedicated CTXbank icon with 3 collapsible views:
+  - **Active Focus:** Current task objective, token budget meter, and active branch.
+  - **Memory Bank Files:** Direct file explorer with line counts and quick-edit actions.
+  - **Checkpoints:** Snapshot history with 1-click restore points.
+- **Status Bar Integration:** Shows current memory token health (`CTX: 48/150 lines`) right in your bottom status bar.
+- **Visual Webview Panel:** Run `CTXbank: Open Visual Architecture Tree` to inspect your project's component tree right inside an editor tab.
+
 
 ---
 

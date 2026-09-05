@@ -1,17 +1,18 @@
-# Active Context — updated initial_bootstrap
+# Active Context — updated multi_track_expansion
 
 ## Focus
-System Build Complete: All 5 Milestones fully implemented, verified, and operational. Ready for developer and agent workflows.
+Multi-Track Expansion Complete: 1-Click Installers, Embedded VERTEX Web Dashboard, and Native VS Code / Cursor Extension fully implemented, packaged, and verified.
 
 ## Recent (last 3 checkpoints)
-- Completed Milestone 5: Cross-project workspace dashboard (`ctx list`) and BYOK hardening (.context/config.toml).
-- Built static single binaries: `bin/ctx.exe` (5.95 MB) and `bin/ctx-mcp.exe` (2.24 MB), zero CGO.
-- Verified 100% passing test suites across all packages and clean CI memory bank linter pass.
+- Track 1: Automated cross-platform GitHub Actions release matrix (`v0.1.0`), standalone tar.gz/zip binaries, and 1-click install scripts (`install.ps1`, `install.sh`).
+- Track 2: Embedded interactive Web Dashboard (`ctx ui` / `ctx dashboard`) with VERTEX Universal Design, SVG node-link architecture graph, real-time memory editor, and SimHash note ingestion.
+- Track 3: Native VS Code & Cursor extension (`extensions/vscode/`) with Activity Bar sidebar, status bar budget meter, architecture tree webview, and packaged `.vsix` uploaded to GitHub Release `v0.1.0`.
 
 ## Next steps
-1. Deploy `ctx` binary to system PATH or developer environment.
-2. Configure agent MCP client (Cursor, Claude Code, Antigravity) pointing to `ctx serve --mcp` or `ctx-mcp.exe`.
-3. Daily usage: `ctx status`, `ctx pause`, `ctx resume`, `ctx audit`, `ctx ingest`.
+1. Community distribution and feedback collection across GitHub, VS Code Marketplace, and developer forums.
+2. Extension publishing to Microsoft VS Code Marketplace and Open VSX Registry (via Personal Access Token).
+3. Continuous development with daily `ctx pause` and `ctx resume` workflows.
 
 ## Open decisions
-- None. System is fully operational and verified against CTXbank architectural specification.
+- None. All 3 tracks are operational, packaged, and deployed.
+

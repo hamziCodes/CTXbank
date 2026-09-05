@@ -21,3 +21,8 @@
   - [x] Phase 07: Tier-1 Local LLM Pipeline (Ollama)
 - [x] M5: Cross-Project Workspace Dashboard & Hardening
   - [x] Phase 10: Cross-Project Dashboard (ctx list) & BYOK Hardening
+- [x] M6: Multi-Track Distribution & Visual Surfaces
+  - [x] Track 1: Automated Release Pipeline & 1-Click Installers (Windows/macOS/Linux)
+  - [x] Track 2: Embedded Interactive Web Dashboard (`ctx ui` with VERTEX Universal Design)
+  - [x] Track 3: Native VS Code & Cursor Activity Bar Extension (`ctxbank-0.1.0.vsix`)
+

@@ -29,3 +29,8 @@ Thumbs.db
 # Temporary test directories
 scratch/
 tmp/
+
+# Node and VS Code extensions
+node_modules/
+*.vsix
+
