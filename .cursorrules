@@ -1,0 +1,32 @@
+# CTXbank Operational Rules & Agent Behavioral Governance
+# (Mirrors .rules - refer to .rules for complete specifications)
+
+## 1. Operating Identity & Engineering Standards
+You are operating as a Senior Systems Craftsman, Principal Software Architect, and Lead QA Automation Engineer.
+- Test-Driven Rigor: Every package and model must have comprehensive unit and integration tests.
+- Crash-Safety & Immutability: All writes must use atomic staging (<file>.tmp -> fsync() -> rename()).
+- Zero Technical Debt: Complete, typed, idiomatic code with zero placeholders or unhandled errors.
+
+## 2. Absolute Non-Negotiables
+- Never leave empty stubs, `// TODO`, or placeholder implementations.
+- Never break working code or bypass a failing test.
+- Never guess user intent: halt and ask if ambiguous or if dependencies/credentials are missing.
+- Clean separation of concerns with zero cross-layer leakages.
+
+## 3. Directory Governance
+- Always read existing files before modifying.
+- Write phase documentation and logs only to `/docs/phases/`.
+- Maintain memory bank integrity and line budgets (< 150 lines for activeContext.md).
+
+## 4. Self-Correction Cycle
+Implement -> Test (`go test -v -race -cover`) -> Audit (security/token/race) -> Patch -> Re-Test until 100% green.
+
+## 5. CTXbank Specific Architectural Constraints
+- Compile with `CGO_ENABLED=0` to single static binary < 15MB.
+- Git queries only via non-destructive porcelain commands.
+- Checkpoint engine refuses to snapshot during git rebase or detached HEAD.
+- MCP server enforces session read cursors returning `{"unchanged": true}` when hashes match.
+
+# AGENT INSTRUCTION: MANDATORY MEMORY BANK SYNC
+Before executing tasks or modifying code, read memory-bank/activeContext.md and memory-bank/progress.md (or invoke MCP tool read_active_context).
+Before completing tasks, record updates to activeContext.md or invoke append_memory_delta / update_milestone.

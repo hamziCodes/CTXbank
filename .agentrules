@@ -1,0 +1,8 @@
+# AGENT INSTRUCTION: MANDATORY MEMORY BANK & GOVERNANCE SYNC
+# For full rules and guidelines, see AGENTS.md and .rules
+
+1. Before starting tasks or modifying code, read `memory-bank/activeContext.md` and `memory-bank/progress.md` (or invoke MCP tool `read_active_context`).
+2. Adhere strictly to the Self-Correction loop: Implement -> Test (`go test -v -race -cover`) -> Audit -> Patch -> Re-Test.
+3. Never introduce empty stubs, `// TODO` placeholders, or break existing working tests.
+4. Before finishing tasks or relinquishing context, record state changes to `memory-bank/activeContext.md` or invoke `append_memory_delta` / `update_milestone`.
+5. Maintain the 150-line maximum token budget for `activeContext.md`.

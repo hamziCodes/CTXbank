@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test & Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Run Tests
+        run: go test -v -race ./...
+
+      - name: Build Static Binaries
+        run: |
+          go build -ldflags="-s -w" -o ./bin/ctx ./cmd/ctx
+          go build -ldflags="-s -w" -o ./bin/ctx-mcp ./cmd/ctx-mcp
