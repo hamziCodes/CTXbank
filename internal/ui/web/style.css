@@ -4,32 +4,32 @@
    ========================================================================== */
 
 :root {
-  /* Brand Palette (Navy & Oceanic Blue) */
-  --brand-primary: #042940;
-  --brand-hover: #0b3b5b;
-  --brand-light: #e8f1f5;
-  --brand-accent: #0077b6;
-  --accent-text: #042940;
-  --focus-ring: rgba(4, 41, 64, 0.25);
+  /* VERTEX Soft Harbor palette — flat, calm, welcoming */
+  --brand-primary: #5B7A8C;
+  --brand-hover: #486575;
+  --brand-light: rgba(91, 122, 140, 0.10);
+  --brand-accent: #5B7A8C;
+  --accent-text: #3E5C6B;
+  --focus-ring: rgba(91, 122, 140, 0.35);
 
   /* Light Canvas & Surfaces */
-  --app-canvas: #f6f8fb;
+  --app-canvas: #F4F6F7;
   --app-surface: #ffffff;
-  --app-surface-sunken: #f0f3f7;
-  --app-surface-hover: rgba(4, 41, 64, 0.03);
-  --app-line: #e2e8f0;
-  --app-line-strong: #cbd5e1;
-  --app-ink: #0f172a;
-  --app-ink-soft: #475569;
-  --app-ink-muted: #64748b;
+  --app-surface-sunken: #E9EFF2;
+  --app-surface-hover: rgba(30, 42, 51, 0.04);
+  --app-line: #D8DFE4;
+  --app-line-strong: #768893;
+  --app-ink: #1E2A33;
+  --app-ink-soft: #5B6F7B;
+  --app-ink-muted: #768893;
 
   /* State Colors */
-  --positive: #10b981;
-  --positive-soft: #ecfdf5;
-  --negative: #ef4444;
-  --negative-soft: #fef2f2;
-  --attention: #f59e0b;
-  --attention-soft: #fffbeb;
+  --positive: #3E7C5B;
+  --positive-soft: rgba(62, 124, 91, 0.10);
+  --negative: #B4543F;
+  --negative-soft: rgba(180, 84, 63, 0.10);
+  --attention: #A86A1F;
+  --attention-soft: rgba(168, 106, 31, 0.10);
 
   /* Smooth Radius System */
   --radius-xs: 6px;
@@ -50,34 +50,41 @@
   --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Dark Theme */
+/* Soft Harbor typography: Fraunces for display headings and brand */
+h1, h2, h3, .view-title, .modal-title, .brand-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Dark Theme — Soft Harbor dark */
 html.dark {
-  --brand-primary: #609abe;
-  --brand-hover: #7eb3d3;
-  --brand-light: rgba(96, 154, 190, 0.15);
-  --brand-accent: #38bdf8;
-  --accent-text: #609abe;
-  --focus-ring: rgba(96, 154, 190, 0.35);
+  --brand-primary: #82A5B6;
+  --brand-hover: #96B7C7;
+  --brand-light: rgba(130, 165, 182, 0.14);
+  --brand-accent: #82A5B6;
+  --accent-text: #82A5B6;
+  --focus-ring: rgba(130, 165, 182, 0.40);
 
-  --app-canvas: #090d12;
-  --app-surface: #111720;
-  --app-surface-sunken: #0c1017;
-  --app-surface-hover: rgba(255, 255, 255, 0.04);
-  --app-line: #222e3e;
-  --app-line-strong: #33445b;
-  --app-ink: #f8fafc;
-  --app-ink-soft: #94a3b8;
-  --app-ink-muted: #64748b;
+  --app-canvas: #131D25;
+  --app-surface: #1B2833;
+  --app-surface-sunken: #243443;
+  --app-surface-hover: rgba(233, 239, 243, 0.06);
+  --app-line: #2F414F;
+  --app-line-strong: #546B7A;
+  --app-ink: #E9EFF3;
+  --app-ink-soft: #9AADBA;
+  --app-ink-muted: #768893;
 
-  --positive: #34d399;
-  --positive-soft: rgba(52, 211, 153, 0.12);
-  --negative: #f87171;
-  --negative-soft: rgba(248, 113, 113, 0.12);
-  --attention: #fbbf24;
-  --attention-soft: rgba(251, 191, 36, 0.12);
+  --positive: #6FAE8A;
+  --positive-soft: rgba(111, 174, 138, 0.12);
+  --negative: #D08675;
+  --negative-soft: rgba(208, 134, 117, 0.12);
+  --attention: #D9A45B;
+  --attention-soft: rgba(217, 164, 91, 0.12);
 
   --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--app-line);
   --shadow-card-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--brand-primary);
@@ -126,7 +133,7 @@ header {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--brand-primary), #0077b6);
+  background: var(--brand-primary);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -396,7 +403,7 @@ html.dark .nav-item.active {
 
 /* ==================== VIEW 1: HERO & OVERVIEW STYLES ==================== */
 .hero-card {
-  background: linear-gradient(135deg, var(--brand-primary), #0077b6);
+  background: var(--brand-primary);
   color: #ffffff;
   border-radius: var(--radius-lg);
   padding: 32px;
@@ -404,21 +411,14 @@ html.dark .nav-item.active {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  box-shadow: 0 8px 30px rgba(4, 41, 64, 0.25);
+  box-shadow: 0 8px 24px rgb(30 42 51 / 0.16);
   position: relative;
   overflow: hidden;
 }
 
-.hero-card::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
-  pointer-events: none;
+/* Dark mode keeps a deep harbor tone so the white hero text stays legible */
+html.dark .hero-card {
+  background: #486575;
 }
 
 .hero-content {
@@ -541,8 +541,8 @@ html.dark .nav-item.active {
 }
 
 .metric-icon.accent {
-  background: rgba(0, 119, 182, 0.12);
-  color: #0077b6;
+  background: var(--brand-light);
+  color: var(--accent-text);
 }
 
 .metric-title {
@@ -1143,6 +1143,51 @@ html.dark .file-name-title {
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* Guide view */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+.guide-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+.guide-card h3 { margin: 0 0 10px; font-size: 1.05rem; }
+.guide-card p { color: var(--app-ink-soft); font-size: 0.93rem; margin: 0 0 10px; }
+.guide-card p:last-child { margin-bottom: 0; }
+.guide-card a { color: var(--accent-text); }
+.guide-dl { margin: 0; display: grid; gap: 10px; }
+.guide-dl > div { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: baseline; }
+.guide-dl dt { font-size: 0.85rem; }
+.guide-dl dd { margin: 0; color: var(--app-ink-soft); font-size: 0.9rem; }
+@media (max-width: 640px) { .guide-dl > div { grid-template-columns: 1fr; gap: 2px; } }
+
+/* App footer */
+.app-footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--app-line);
+  background: var(--app-surface);
+  font-size: 12px;
+  color: var(--app-ink-muted);
+  flex-wrap: wrap;
+}
+.footer-wordmark { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--app-ink); }
+.footer-wordmark strong { letter-spacing: 0.04em; }
+.footer-slash { color: var(--app-ink-muted); margin: 0 2px; }
+.footer-ctx { color: var(--accent-text); }
+.footer-project { font-family: var(--font-mono); color: var(--app-ink-soft); }
+.footer-note { flex: 1; }
+.footer-version { font-family: var(--font-mono); }
+.app-footer a { color: var(--accent-text); text-decoration: none; }
+.app-footer a:hover { text-decoration: underline; }
+
 /* Static project name in header (single-project dashboard; no switching) */
 .project-name-static {
   display: inline-flex;
@@ -1252,7 +1297,7 @@ html.dark .file-name-title {
 
 /* Uninitialized Project Warning Banner */
 .uninit-banner {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));
+  background: var(--attention-soft);
   border: 1.5px solid var(--attention);
   border-radius: var(--radius-md);
   padding: 18px 24px;
@@ -1260,7 +1305,7 @@ html.dark .file-name-title {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+  box-shadow: var(--shadow-sm);
   animation: fadeIn 0.25s ease;
 }
 
@@ -1287,13 +1332,13 @@ html.dark .file-name-title {
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: var(--attention);
   color: #ffffff;
 }
 
 .btn-warning:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  filter: brightness(0.92);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 

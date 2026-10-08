@@ -1,15 +1,45 @@
 // CTXbank Interactive Dashboard Application Logic (Smooth UX & Non-Tech Friendly)
 
-// Dashboard auth: the server prints a per-launch token in the URL (?token=...).
+// Dashboard auth: the project token rides in the URL (?token=...).
 // Every API call goes through apiFetch, which appends it. Without the token
 // the server answers 401, so the UI shell alone is useless to an attacker.
-const CTX_TOKEN = new URLSearchParams(location.search).get('token') || '';
+let CTX_TOKEN = new URLSearchParams(location.search).get('token') || '';
 function apiFetch(path, opts) {
   const sep = path.includes('?') ? '&' : '?';
   return fetch(path + sep + 'token=' + encodeURIComponent(CTX_TOKEN), opts);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Token gate: if the URL lost its ?token=, ask for it instead of
+  // showing a dead, empty dashboard.
+  const tokenGate = document.getElementById('token-gate');
+  if (!CTX_TOKEN && tokenGate) {
+    tokenGate.style.display = 'flex';
+    tokenGate.classList.add('active');
+    const gateInput = document.getElementById('token-gate-input');
+    const gateError = document.getElementById('token-gate-error');
+    const submitGate = async () => {
+      const t = (gateInput.value || '').trim();
+      if (!t) return;
+      try {
+        const res = await fetch('/api/status?token=' + encodeURIComponent(t));
+        if (res.ok) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('token', t);
+          window.location.href = url.toString();
+        } else {
+          gateError.style.display = 'block';
+        }
+      } catch (e) {
+        gateError.style.display = 'block';
+      }
+    };
+    document.getElementById('btn-token-gate-submit').addEventListener('click', submitGate);
+    gateInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitGate(); });
+    gateInput.focus();
+    return; // don't boot the rest of the app until we have a token
+  }
+
   // Navigation State
   const navItems = document.querySelectorAll('.nav-item[data-view]');
   const viewPanels = document.querySelectorAll('.view-panel');
@@ -97,6 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // Header Bar
       const repoNameEl = document.getElementById('repo-name');
       if (repoNameEl) repoNameEl.textContent = data.project_name || 'Project';
+
+      // Footer
+      const footerProject = document.getElementById('footer-project');
+      if (footerProject) footerProject.textContent = data.repo_dir || '';
+      const footerVersion = document.getElementById('footer-version');
+      if (footerVersion && data.ctx_version) footerVersion.textContent = 'ctx v' + data.ctx_version;
 
       const branchNameEl = document.getElementById('branch-name');
       if (branchNameEl) branchNameEl.textContent = data.branch || 'main';

@@ -88,6 +88,12 @@ CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/status
 [ "$CODE" = "401" ] && ok "API without token -> 401" || bad "no-token gave $CODE"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/status?token=$TOKEN")
 [ "$CODE" = "200" ] && ok "API with token -> 200" || bad "token gave $CODE"
+curl -s "http://localhost:$PORT/api/status?token=$TOKEN" | grep -q '"ctx_version"' \
+  && ok "/api/status reports ctx_version" || bad "ctx_version missing"
+for marker in 'id="token-gate"' 'id="guide-view"' 'class="app-footer"' 'data-view="guide-view"'; do
+  curl -s "http://localhost:$PORT/?token=$TOKEN" | grep -q "$marker" \
+    && ok "dashboard HTML has $marker" || bad "dashboard missing $marker"
+done
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "X-CTX-Token: $TOKEN" "http://localhost:$PORT/api/files")
 [ "$CODE" = "200" ] && ok "API with header token -> 200" || bad "header token gave $CODE"
 curl -s -D - -o /dev/null "http://localhost:$PORT/api/status?token=$TOKEN" | grep -qi "access-control-allow-origin: \*" \

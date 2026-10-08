@@ -616,6 +616,7 @@ func runUI(args []string) {
 		fmt.Fprintf(os.Stderr, "Dashboard error: %v\n", err)
 		os.Exit(1)
 	}
+	ui.Version = Version
 	if err := server.Start(!*noOpenFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Dashboard server error: %v\n", err)
 		os.Exit(1)

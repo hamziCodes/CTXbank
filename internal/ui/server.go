@@ -29,6 +29,11 @@ import (
 //go:embed web/*
 var embeddedFiles embed.FS
 
+// Version is the ctx binary version, set by cmd/ctx at startup
+// (release builds stamp it via ldflags). Surfaced in /api/status so
+// the hosted Connect page can tell stale dashboards apart.
+var Version = "dev"
+
 // writableMemoryFiles is the whitelist for /api/file/save: only the 7
 // Cline-compatible memory-bank files may be written through the dashboard.
 var writableMemoryFiles = map[string]bool{
@@ -224,6 +229,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"project_name":  filepath.Base(repoDir),
 		"repo_dir":      repoDir,
+		"ctx_version":   Version,
 		"branch":        branch,
 		"has_bank":      hasBank,
 		"dirty_count":   len(dirtyFiles),

@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -89,6 +89,30 @@
     </div>
   </header>
 
+  <!-- Token Gate: shown when the URL has no ?token= -->
+  <div class="modal-overlay" id="token-gate" style="display: none;">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Enter your project token</h3>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted" style="margin-bottom: 14px;">
+          This dashboard needs your project's token to load. Run <code>ctx token</code>
+          in your project folder and paste it below.
+        </p>
+        <input type="password" id="token-gate-input" class="form-input font-mono"
+               placeholder="paste token from ctx token" autocomplete="off" spellcheck="false"
+               style="width: 100%;">
+        <div id="token-gate-error" class="text-sm" style="display: none; color: var(--negative); margin-top: 10px;">
+          That token was rejected. Make sure it matches <code>ctx token</code> in this project's folder.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-token-gate-submit" style="width: 100%;">Unlock dashboard</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Application Layout -->
   <div class="app-container">
 
@@ -140,6 +164,15 @@
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
         <span>Checkpoints</span>
+      </div>
+
+      <div class="nav-item" data-view="guide-view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>Guide</span>
       </div>
 
       <div class="sidebar-footer">
@@ -488,8 +521,72 @@
         </div>
       </section>
 
+      <!-- ==================== VIEW 6: GUIDE ==================== -->
+      <section class="view-panel" id="guide-view">
+        <div class="view-header">
+          <div>
+            <h2 class="view-title">Guide</h2>
+            <p class="view-subtitle">The basics, in plain words. This dashboard serves one project — the one you ran <code>ctx ui</code> in.</p>
+          </div>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-card">
+            <h3>What is CTXbank?</h3>
+            <p>A small notebook that lives inside your project. It writes down what you're building, what you decided, and what to do next — so you and your AI assistant never start from zero again.</p>
+          </div>
+          <div class="guide-card">
+            <h3>The pieces</h3>
+            <dl class="guide-dl">
+              <div><dt><code>memory-bank/</code></dt><dd>Seven text files. The project's notebook.</dd></div>
+              <div><dt>Checkpoint</dt><dd>A save point: git state + your notes, frozen in time.</dd></div>
+              <div><dt>MCP server</dt><dd>The bridge your AI assistant reads through (<code>ctx serve --mcp</code>).</dd></div>
+              <div><dt>Project token</dt><dd>This project's private key. Run <code>ctx token</code> to see it.</dd></div>
+            </dl>
+          </div>
+          <div class="guide-card">
+            <h3>Everyday commands</h3>
+            <dl class="guide-dl">
+              <div><dt><code>ctx status</code></dt><dd>Where am I? Branch, dirty files, current focus.</dd></div>
+              <div><dt><code>ctx pause</code></dt><dd>Save point. Snapshots everything, asks for a note.</dd></div>
+              <div><dt><code>ctx resume</code></dt><dd>Pick up instantly after a break.</dd></div>
+              <div><dt><code>ctx token</code></dt><dd>Show this project's dashboard token.</dd></div>
+              <div><dt><code>ctx doctor</code></dt><dd>Self-check when something feels wrong.</dd></div>
+              <div><dt><code>ctx lint-memory</code></dt><dd>Keeps the notebook small and readable.</dd></div>
+            </dl>
+          </div>
+          <div class="guide-card">
+            <h3>Your token</h3>
+            <p>Every API call this dashboard makes needs your project token. It's in this page's URL (<code>?token=…</code>) and in <code>memory-bank/.state/dashboard_token</code> on your machine — never committed to git.</p>
+            <p>Shared it by accident? Run <code>ctx token --regenerate</code> — the old one stops working immediately.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Something wrong?</h3>
+            <p><strong>Dashboard looks empty:</strong> the URL lost its <code>?token=…</code>. Re-open it from the terminal output of <code>ctx ui</code>, or paste the token when asked.</p>
+            <p><strong>Connect page rejects the token:</strong> make sure <code>ctx token</code> was run in the <em>same folder</em> as <code>ctx ui</code> — every project has its own token.</p>
+            <p><strong>Still stuck:</strong> run <code>ctx doctor</code> in your terminal.</p>
+          </div>
+          <div class="guide-card">
+            <h3>Learn more</h3>
+            <p><a href="https://ctxbank.vertexdevstudio.tech/#how" target="_blank" rel="noopener">How CTXbank works</a> — the full story in simple English.<br>
+            <a href="https://ctxbank.vertexdevstudio.tech/#setup" target="_blank" rel="noopener">Set me up</a> — install and connect a new project.<br>
+            <a href="https://github.com/hamziCodes/CTXbank" target="_blank" rel="noopener">Source code</a> — free and open source (MIT).</p>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <span class="footer-wordmark"><strong>VERTEX</strong><span class="footer-slash">/</span><span class="footer-ctx">ctxbank</span></span>
+    <span class="footer-project" id="footer-project" title="The project this dashboard serves"></span>
+    <span class="footer-note">Local-first &middot; your data never leaves this machine</span>
+    <span class="footer-version" id="footer-version"></span>
+    <a href="https://ctxbank.vertexdevstudio.tech/#how" target="_blank" rel="noopener">How it works</a>
+    <a href="https://github.com/hamziCodes/CTXbank" target="_blank" rel="noopener">GitHub</a>
+  </footer>
 
   <!-- Modal: Create Checkpoint -->
   <div class="modal-overlay" id="checkpoint-modal">

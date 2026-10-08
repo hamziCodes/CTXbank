@@ -125,6 +125,20 @@
     statusBox.innerHTML = html;
   }
 
+  // Returns a promise resolving true if SOMETHING answers on the port.
+  // A no-cors fetch resolves (opaque) even when the server sends no CORS
+  // headers — which is exactly what an outdated ctx does. That lets us
+  // tell "old version" apart from "nothing running".
+  function probeReachable(port, ms) {
+    return new Promise(function (resolve) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); resolve(false); }, ms || 2500);
+      fetch('http://localhost:' + port + '/api/status', { mode: 'no-cors', signal: controller.signal })
+        .then(function () { clearTimeout(timer); resolve(true); })
+        .catch(function () { clearTimeout(timer); resolve(false); });
+    });
+  }
+
   function testConnection() {
     var token = tokenInput.value.trim();
     if (!token) {
@@ -149,18 +163,27 @@
       })
       .then(function (data) {
         var name = (data && data.project_name) || 'your project';
-        var branch = data && data.branch ? ' &middot; <code>' + data.branch + '</code>' : '';
+        var branch = data && data.branch ? ' &middot; <code>' + escapeHtml(data.branch) + '</code>' : '';
+        var ver = data && data.ctx_version ? ' &middot; ctx v' + escapeHtml(data.ctx_version) : '';
         lastGoodUrl = localUrl();
         openBtn.disabled = false;
-        setStatus('ok', '<span class="status-dot ok"></span>Connected to <strong>' + escapeHtml(name) + '</strong>' + branch + '. Your dashboard is ready.');
+        setStatus('ok', '<span class="status-dot ok"></span>Connected to <strong>' + escapeHtml(name) + '</strong>' + branch + ver + '. Your dashboard is ready.');
       })
       .catch(function (err) {
         clearTimeout(timer);
         if (err && err.message === 'bad-token') {
-          setStatus('err', '<span class="status-dot err"></span>That token was rejected. Double-check it matches <code>ctx token</code> output for this project.');
-        } else {
-          setStatus('err', '<span class="status-dot err"></span>Can\'t reach your dashboard. Is <code>ctx ui</code> running in your project? It serves on <code>localhost:' + port + '</code>.');
+          setStatus('err', '<span class="status-dot err"></span>That token was rejected. Make sure it matches <code>ctx token</code> output <em>in the same project folder</em> where you ran <code>ctx ui</code> — every project has its own token.');
+          return;
         }
+        // Network-level failure: is anything even listening?
+        setStatus('', '<span class="status-dot busy"></span>That didn\'t answer — checking what\'s on that port…');
+        probeReachable(port).then(function (reachable) {
+          if (reachable) {
+            setStatus('err', '<span class="status-dot err"></span>Something is running on port ' + port + ', but it won\'t talk to this page. You\'re almost certainly on an <strong>outdated ctx</strong> (older versions can\'t do this handshake). Update: <code>go install github.com/hamziCodes/CTXbank/cmd/ctx@latest</code> — or re-run the installer — then <code>ctx ui</code> again.');
+          } else {
+            setStatus('err', '<span class="status-dot err"></span>Can\'t reach your dashboard. Is <code>ctx ui</code> running in your project? It serves on <code>localhost:' + port + '</code>.');
+          }
+        });
       });
   }
 

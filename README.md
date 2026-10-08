@@ -123,6 +123,8 @@ This instantly boots a local web dashboard (served directly from the static bina
 
 **Project tokens:** every project gets its own dashboard token — a private key printed by `ctx init` and retrievable anytime with `ctx token`. The dashboard requires it on every request, so nothing else on your machine (or a stray browser tab) can touch your memory bank. Paste the token on the [Connect page](https://ctxbank.vertexdevstudio.tech/#connect) to open your local dashboard from the website. Lost it? `ctx token --regenerate` makes a new one.
 
+**Dashboard extras:** a built-in **Guide** tab explains every view and command in plain English; if you open the dashboard URL without its `?token=…`, it asks for the token instead of showing a dead page. The footer shows your project path and `ctx` version — the Connect page uses that version to tell you when your `ctx` is too old to connect (update with `go install github.com/hamziCodes/CTXbank/cmd/ctx@latest`).
+
 ### 2. Native VS Code & Cursor Extension
 Install the official extension directly in VS Code or Cursor — download the `.vsix` first (`code --install-extension` does not accept URLs):
 ```bash
