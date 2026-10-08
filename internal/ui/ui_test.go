@@ -87,5 +87,29 @@ func TestUIServerAPIRoutes(t *testing.T) {
 	if wInspect.Code != http.StatusOK {
 		t.Errorf("expected 200 OK from /api/project/inspect, got %d", wInspect.Code)
 	}
+
+	// Test /api/prompt-sync handler
+	reqPromptSync := httptest.NewRequest(http.MethodPost, "/api/prompt-sync", nil)
+	wPromptSync := httptest.NewRecorder()
+	server.handlePromptSync(wPromptSync, reqPromptSync)
+	if wPromptSync.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/prompt-sync, got %d (body: %s)", wPromptSync.Code, wPromptSync.Body.String())
+	}
+
+	// Test /api/prompt-sync/status handler
+	reqSyncStatus := httptest.NewRequest(http.MethodGet, "/api/prompt-sync/status", nil)
+	wSyncStatus := httptest.NewRecorder()
+	server.handlePromptSyncStatus(wSyncStatus, reqSyncStatus)
+	if wSyncStatus.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/prompt-sync/status, got %d", wSyncStatus.Code)
+	}
+
+	// Test /api/prompt-sync/verify handler
+	reqSyncVerify := httptest.NewRequest(http.MethodPost, "/api/prompt-sync/verify", nil)
+	wSyncVerify := httptest.NewRecorder()
+	server.handlePromptSyncVerify(wSyncVerify, reqSyncVerify)
+	if wSyncVerify.Code != http.StatusOK {
+		t.Errorf("expected 200 OK from /api/prompt-sync/verify, got %d", wSyncVerify.Code)
+	}
 }
 

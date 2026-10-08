@@ -2,50 +2,52 @@
   "version": "1.0.0",
   "files": {
     "activeContext.md": {
-      "sha256": "0ef65b28884e2519ba17f7d3df31955e024051ea93e78cefedef8b3fe1d04615",
-      "bytes": 1213,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z",
+      "sha256": "13aa181a4798ee37b29ad7a4d70758729d29b131a9eac50e2bf45fcb1f8766cb",
+      "bytes": 1434,
+      "last_ckpt": "ckpt_20261008_101038",
+      "updated_at": "2026-10-08T10:10:38.9041666Z",
       "volatility": "hot"
     },
     "decisionLog.md": {
-      "sha256": "d601954a475d794d9c39702c0d8765d1d3828dfb9c63d871af597379c6fbda01",
-      "bytes": 546,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.3986891Z",
+      "sha256": "60ce2be51772e7f6e90131282ba82f8788b87529faa8c6a6f5a668de45fb248d",
+      "bytes": 2331,
+      "last_ckpt": "ckpt_20261008_101038",
+      "updated_at": "2026-10-08T10:10:38.9041666Z",
       "volatility": "semi-static"
     },
     "productContext.md": {
-      "sha256": "2f7cfacae2cb39078591c64c210b266faa7bbb63196386e711d30851405fbfce",
-      "bytes": 1248,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z",
+      "sha256": "43fbfdb971e20b08b3945e4c2100ee29fc2cb0ba0af76bfb21da01d55dade6b6",
+      "bytes": 1952,
+      "last_ckpt": "ckpt_20261008_101038",
+      "updated_at": "2026-10-08T10:10:38.9041666Z",
       "volatility": "static"
     },
     "progress.md": {
-      "sha256": "91c9df426b6edb60ba2fda8bd2328e5955bffc3a10868d18b6799273d7bdfa94",
-      "bytes": 1402,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z",
+      "sha256": "482cb95c0016422ef46d6613d1fbbd4499571efc0cf370c4c3eb6e292f8eade0",
+      "bytes": 1692,
+      "last_ckpt": "ckpt_20261008_101038",
+      "updated_at": "2026-10-08T10:10:38.9041666Z",
       "volatility": "hot"
     },
     "projectbrief.md": {
-      "sha256": "424eaa1d61234c85da3c80cfd1459c5d65cc8c92a9acf26769c04885e9c9a636",
-      "bytes": 453,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z"
+      "sha256": "e52ddd673d45e25e2e9f8a94bbfcf776b721d234d37da2d949e179da7a4db5bc",
+      "bytes": 2097,
+      "last_ckpt": "ckpt_20261008_101038",
+      "updated_at": "2026-10-08T10:10:38.9041666Z"
     },
     "systemPatterns.md": {
-      "sha256": "05a0b9eade4f189f0e899a2a4681380876fa4be9d531f9e714c5656aae48c66c",
-      "bytes": 589,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z"
+      "sha256": "acb0ad4112ca00826f723489f6402a56aada7925811d90654ac1a00c5f8ab2c7",
+      "bytes": 2520,
+      "last_ckpt": "",
+      "updated_at": "2026-10-08T10:10:40.3092282Z",
+      "volatility": "semi-static"
     },
     "techContext.md": {
-      "sha256": "f05be71fb62fba2770f49d5a8a5a67bb95421fa79e812f1a43dc7f52af91f17e",
-      "bytes": 411,
-      "last_ckpt": "ckpt_20260905_203618",
-      "updated_at": "2026-09-05T20:36:18.0017238Z"
+      "sha256": "dbb95ba35b5e681c1b9480882a92e1f7b9b09cf696496411155806eaf973fa88",
+      "bytes": 813,
+      "last_ckpt": "",
+      "updated_at": "2026-10-08T10:10:40.2717584Z",
+      "volatility": "semi-static"
     }
   },
   "agent_read_cursors": {

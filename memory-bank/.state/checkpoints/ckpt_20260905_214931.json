@@ -1,0 +1,51 @@
+{
+  "id": "ckpt_20260905_214931",
+  "timestamp": "2026-09-05T21:49:31.4640422Z",
+  "branch": "main",
+  "head_commit": "2e845e5b846be67c3764fa0578ebfbc53fb5062b",
+  "commit_message": "feat(ui): add 1-click Sync Context button, automatic uninitialized project detection, and fix property mappings for graph and files",
+  "dirty_files": [
+    {
+      "path": "cmd/ctx/main.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/server.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/ui_test.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/app.js",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/index.html",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/style.css",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/sync/",
+      "staging_status": "?",
+      "worktree_status": "?"
+    }
+  ],
+  "diff_stat": "cmd/ctx/main.go            |  87 +++++++++++++++++++++\n internal/ui/server.go      |  42 ++++++++++\n internal/ui/ui_test.go     |  24 ++++++\n internal/ui/web/app.js     | 190 ++++++++++++++++++++++++++++++++++++++++++++-\n internal/ui/web/index.html | 107 +++++++++++++++++++++++++\n internal/ui/web/style.css  |  46 +++++++++++\n 6 files changed, 495 insertions(+), 1 deletion(-)",
+  "active_focus": "Pre-Prompt-Sync Snapshot: Automated safety backup before AI agent populates memory bank",
+  "next_steps": [
+    "Provide generated prompt to AI coding agent (Cursor, Claude Code, Antigravity)",
+    "Verify memory bank updates via 'ctx prompt-sync --verify' or Web UI"
+  ],
+  "manual_edits": null
+}

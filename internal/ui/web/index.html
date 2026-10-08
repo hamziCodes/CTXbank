@@ -71,6 +71,13 @@
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
+      <button class="btn btn-warning" id="btn-prompt-sync" title="Auto-Checkpoint & Generate AI Directive Prompt for Coding Agent">
+        <svg id="icon-prompt-sync" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>Prompt Sync</span>
+        <span class="badge" id="prompt-sync-counter">0</span>
+      </button>
       <button class="btn btn-secondary" id="btn-sync-context" title="Sync Codebase with Memory Bank">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="23 4 23 10 17 10"></polyline>
@@ -311,6 +318,40 @@
             </div>
           </div>
 
+          <!-- Card 4: AI Prompt Sync Controller -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <div class="metric-icon accent" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <div>
+                <span class="metric-title">Prompt Sync</span>
+                <div class="metric-subtitle">Agent population & audit</div>
+              </div>
+              <span class="chip" id="overview-sync-status-badge">idle</span>
+            </div>
+            <div class="metric-body">
+              <div class="info-row">
+                <span class="info-label">Sync Counter:</span>
+                <span class="info-val font-mono font-bold" id="overview-sync-count">0</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Pre-Sync Backup:</span>
+                <span class="info-val font-mono text-xs" id="overview-sync-ckpt">none</span>
+              </div>
+              <div class="flex gap-2 mt-3">
+                <button class="btn btn-sm btn-warning w-full" id="btn-overview-prompt-sync">
+                  ⚡ Run Sync
+                </button>
+                <button class="btn btn-sm btn-secondary w-full" id="btn-overview-verify-sync" title="Audit whether agent populated all 7 files">
+                  ✓ Verify
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Explanatory Guide for Non-Technical Users -->
@@ -503,6 +544,8 @@
         </div>
       </div>
     </div>
+  </div>
+
   <!-- Modal: Project Switcher & Workspace Ingestion -->
   <div class="modal-overlay" id="project-modal">
     <div class="modal-card modal-lg">
@@ -555,6 +598,70 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="btn-cancel-project-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Prompt Sync & AI Directive -->
+  <div class="modal-overlay" id="prompt-sync-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="flex items-center gap-3">
+          <div class="metric-icon accent" style="width: 32px; height: 32px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">AI Directive Prompt Sync</h3>
+            <div class="text-xs text-muted">Safe pre-sync checkpoint captured &bull; Tailored instructions for your coding agent</div>
+          </div>
+        </div>
+        <button class="btn-close" id="btn-close-prompt-sync-modal">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 16px;">
+        
+        <!-- Snapshot Alert -->
+        <div class="banner-box flex-between">
+          <div class="flex items-center gap-2">
+            <span class="status-dot"></span>
+            <span class="text-xs">Pre-Sync Checkpoint: <strong id="prompt-sync-modal-ckpt" class="font-mono text-accent">ckpt_...</strong></span>
+          </div>
+          <span class="chip clean" id="prompt-sync-modal-status">Awaiting Agent</span>
+        </div>
+
+        <p class="text-xs text-muted">
+          Copy this directive prompt and paste it into your AI coding assistant (Cursor Composer, Claude Code, or Antigravity). The agent will analyze your codebase and accurately populate all 7 memory bank files within token limits.
+        </p>
+
+        <!-- Prompt Textarea Display -->
+        <div class="prompt-display-container">
+          <textarea id="prompt-sync-text" class="code-editor" readonly style="min-height: 280px; font-size: 11px;"></textarea>
+        </div>
+
+        <!-- Verification Results Box -->
+        <div id="prompt-sync-verify-result" style="display: none;" class="folder-inspect-box">
+          <!-- Populated dynamically -->
+        </div>
+
+      </div>
+      <div class="modal-footer flex-between">
+        <button class="btn btn-secondary" id="btn-verify-agent-sync">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Verify AI Memory Bank
+        </button>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary" id="btn-cancel-prompt-sync-modal">Close</button>
+          <button class="btn btn-primary" id="btn-copy-sync-prompt">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copy-btn-text">Copy Prompt to Clipboard</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

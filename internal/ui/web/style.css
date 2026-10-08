@@ -1261,3 +1261,49 @@ html.dark .file-name-title {
   justify-content: center;
   flex-shrink: 0;
 }
+
+/* Prompt Sync & Animation Helpers */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.banner-box {
+  background: var(--brand-light);
+  border: 1px solid rgba(0, 119, 182, 0.25);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.prompt-display-container {
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-sunken);
+  overflow: hidden;
+}
+

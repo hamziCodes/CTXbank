@@ -73,7 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStatus();
   loadFiles();
   loadGraph();
-  setInterval(loadStatus, 10000);
+  loadPromptSyncStatus();
+  setInterval(() => {
+    loadStatus();
+    loadPromptSyncStatus();
+  }, 10000);
 
   // 1. Status Loading
   async function loadStatus() {
@@ -661,6 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCancelProjectModal && projectModal) {
     btnCancelProjectModal.addEventListener('click', () => projectModal.classList.remove('active'));
   }
+  if (projectModal) {
+    projectModal.addEventListener('click', (e) => {
+      if (e.target === projectModal) projectModal.classList.remove('active');
+    });
+  }
 
   async function loadProjectsModal() {
     if (!discoveredProjectsList) return;
@@ -851,6 +860,185 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (e) {
         showToast('Lint check failed.');
+      }
+    });
+  }
+
+  // 10. Prompt Sync & Directive Engine
+  const btnPromptSync = document.getElementById('btn-prompt-sync');
+  const iconPromptSync = document.getElementById('icon-prompt-sync');
+  const promptSyncCounter = document.getElementById('prompt-sync-counter');
+  const btnOverviewPromptSync = document.getElementById('btn-overview-prompt-sync');
+  const btnOverviewVerifySync = document.getElementById('btn-overview-verify-sync');
+  const overviewSyncStatusBadge = document.getElementById('overview-sync-status-badge');
+  const overviewSyncCount = document.getElementById('overview-sync-count');
+  const overviewSyncCkpt = document.getElementById('overview-sync-ckpt');
+
+  const promptSyncModal = document.getElementById('prompt-sync-modal');
+  const btnClosePromptSyncModal = document.getElementById('btn-close-prompt-sync-modal');
+  const btnCancelPromptSyncModal = document.getElementById('btn-cancel-prompt-sync-modal');
+  const promptSyncModalCkpt = document.getElementById('prompt-sync-modal-ckpt');
+  const promptSyncModalStatus = document.getElementById('prompt-sync-modal-status');
+  const promptSyncText = document.getElementById('prompt-sync-text');
+  const promptSyncVerifyResult = document.getElementById('prompt-sync-verify-result');
+  const btnVerifyAgentSync = document.getElementById('btn-verify-agent-sync');
+  const btnCopySyncPrompt = document.getElementById('btn-copy-sync-prompt');
+  const copyBtnText = document.getElementById('copy-btn-text');
+
+  async function loadPromptSyncStatus() {
+    try {
+      const res = await fetch('/api/prompt-sync/status');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (promptSyncCounter) {
+        promptSyncCounter.textContent = data.total_syncs || 0;
+      }
+      if (overviewSyncCount) {
+        overviewSyncCount.textContent = data.total_syncs || 0;
+      }
+      if (overviewSyncStatusBadge) {
+        const st = data.status || 'idle';
+        overviewSyncStatusBadge.textContent = st;
+        overviewSyncStatusBadge.className = 'chip ' + (st === 'verified' ? 'clean' : (st === 'awaiting_agent' ? 'warning' : ''));
+      }
+      if (overviewSyncCkpt) {
+        overviewSyncCkpt.textContent = data.last_checkpoint_id || 'none';
+      }
+    } catch (e) {
+      console.error('Failed to load prompt sync status:', e);
+    }
+  }
+
+  async function triggerPromptSync() {
+    if (iconPromptSync) iconPromptSync.classList.add('spin');
+    if (btnPromptSync) btnPromptSync.disabled = true;
+    if (btnOverviewPromptSync) btnOverviewPromptSync.disabled = true;
+    showToast('Creating safety snapshot & generating AI directive prompt...');
+
+    try {
+      const res = await fetch('/api/prompt-sync', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.error) {
+        showToast('Prompt sync failed: ' + data.error);
+        return;
+      }
+
+      if (promptSyncModalCkpt) promptSyncModalCkpt.textContent = data.checkpoint_id || 'none';
+      if (promptSyncModalStatus) promptSyncModalStatus.textContent = data.status || 'Awaiting Agent';
+      if (promptSyncText) promptSyncText.value = data.prompt_text || '';
+      if (promptSyncVerifyResult) {
+        promptSyncVerifyResult.style.display = 'none';
+        promptSyncVerifyResult.innerHTML = '';
+      }
+
+      if (promptSyncModal) promptSyncModal.classList.add('active');
+      showToast(`Prompt Sync #${data.total_syncs} ready! Checkpoint captured.`);
+
+      loadPromptSyncStatus();
+      loadCheckpoints();
+      loadStatus();
+    } catch (err) {
+      showToast('Network error generating prompt sync.');
+    } finally {
+      if (iconPromptSync) iconPromptSync.classList.remove('spin');
+      if (btnPromptSync) btnPromptSync.disabled = false;
+      if (btnOverviewPromptSync) btnOverviewPromptSync.disabled = false;
+    }
+  }
+
+  async function triggerVerifySync() {
+    if (btnVerifyAgentSync) btnVerifyAgentSync.disabled = true;
+    if (btnOverviewVerifySync) btnOverviewVerifySync.disabled = true;
+    showToast('Auditing memory bank population against quality standards...');
+
+    try {
+      const res = await fetch('/api/prompt-sync/verify', { method: 'POST' });
+      const data = await res.json();
+
+      if (promptSyncVerifyResult) {
+        promptSyncVerifyResult.style.display = 'block';
+        if (data.verified) {
+          promptSyncVerifyResult.innerHTML = `
+            <div style="color: var(--positive); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;">
+              <span>✓</span>
+              <span>Memory Bank 100% Compliant & Populated!</span>
+            </div>
+            <p class="text-xs text-muted" style="margin-top: 6px;">
+              Zero placeholders detected. All 7 memory files are dense, informative, and within the 150-line token budget.
+            </p>
+          `;
+          showToast('✓ Memory Bank verified compliant!');
+        } else {
+          const issuesList = (data.issues || []).map(i => `<li style="margin-bottom: 4px;">${i}</li>`).join('');
+          promptSyncVerifyResult.innerHTML = `
+            <div style="color: var(--negative); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;">
+              <span>⚠</span>
+              <span>Verification Issues Detected (${(data.issues || []).length}):</span>
+            </div>
+            <ul class="text-xs font-mono" style="margin-top: 8px; padding-left: 18px; color: var(--app-ink-soft);">
+              ${issuesList}
+            </ul>
+            <p class="text-xs text-muted" style="margin-top: 6px;">
+              Instruct your AI agent to resolve these issues, then verify again.
+            </p>
+          `;
+          showToast(`Verification detected ${(data.issues || []).length} items to fix.`);
+        }
+      }
+
+      loadPromptSyncStatus();
+      loadFiles();
+    } catch (err) {
+      showToast('Error verifying memory bank.');
+    } finally {
+      if (btnVerifyAgentSync) btnVerifyAgentSync.disabled = false;
+      if (btnOverviewVerifySync) btnOverviewVerifySync.disabled = false;
+    }
+  }
+
+  if (btnPromptSync) {
+    btnPromptSync.addEventListener('click', triggerPromptSync);
+  }
+  if (btnOverviewPromptSync) {
+    btnOverviewPromptSync.addEventListener('click', triggerPromptSync);
+  }
+  if (btnOverviewVerifySync) {
+    btnOverviewVerifySync.addEventListener('click', () => {
+      triggerVerifySync();
+      if (promptSyncModal) promptSyncModal.classList.add('active');
+    });
+  }
+  if (btnVerifyAgentSync) {
+    btnVerifyAgentSync.addEventListener('click', triggerVerifySync);
+  }
+
+  if (btnClosePromptSyncModal && promptSyncModal) {
+    btnClosePromptSyncModal.addEventListener('click', () => promptSyncModal.classList.remove('active'));
+  }
+  if (btnCancelPromptSyncModal && promptSyncModal) {
+    btnCancelPromptSyncModal.addEventListener('click', () => promptSyncModal.classList.remove('active'));
+  }
+  if (promptSyncModal) {
+    promptSyncModal.addEventListener('click', (e) => {
+      if (e.target === promptSyncModal) promptSyncModal.classList.remove('active');
+    });
+  }
+
+  if (btnCopySyncPrompt && promptSyncText) {
+    btnCopySyncPrompt.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(promptSyncText.value);
+        if (copyBtnText) copyBtnText.textContent = 'Copied to Clipboard! ✓';
+        showToast('Directive prompt copied to clipboard!');
+        setTimeout(() => {
+          if (copyBtnText) copyBtnText.textContent = 'Copy Prompt to Clipboard';
+        }, 2200);
+      } catch (err) {
+        promptSyncText.select();
+        document.execCommand('copy');
+        showToast('Prompt copied!');
       }
     });
   }

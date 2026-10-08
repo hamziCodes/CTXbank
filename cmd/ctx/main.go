@@ -19,6 +19,7 @@ import (
 	"github.com/ctxbank/ctx/internal/llm"
 	"github.com/ctxbank/ctx/internal/mcp"
 	"github.com/ctxbank/ctx/internal/rules"
+	syncpkg "github.com/ctxbank/ctx/internal/sync"
 	"github.com/ctxbank/ctx/internal/tui"
 	"github.com/ctxbank/ctx/internal/ui"
 	"github.com/ctxbank/ctx/internal/workspace"
@@ -52,6 +53,8 @@ func main() {
 		runIngest(os.Args[2:])
 	case "lint-memory", "lint":
 		runLintMemory(os.Args[2:])
+	case "prompt-sync", "sync-prompt":
+		runPromptSync(os.Args[2:])
 	case "serve":
 		runServe(os.Args[2:])
 	case "--version", "-v", "version":
@@ -78,6 +81,7 @@ Commands:
   list [dir]      List and inspect all CTXbank workspaces under directory
   pause           Safe checkpoint + capture manual out-of-band changes
   resume          Display instant pickup brief for human or agent
+  prompt-sync     Auto-checkpoint + generate tailored AI Directive Prompt
   audit [--apply] Run 4-stage brownfield reconnaissance scan
   ingest <path>   Ingest research notes into memory-bank with diff review
   lint-memory     Enforce line budgets (< 150 lines) and memory integrity
@@ -525,6 +529,89 @@ func runUI(args []string) {
 		os.Exit(1)
 	}
 }
+
+func runPromptSync(args []string) {
+	fs := flag.NewFlagSet("prompt-sync", flag.ExitOnError)
+	verifyFlag := fs.Bool("verify", false, "Verify memory-bank population against quality rules")
+	statusFlag := fs.Bool("status", false, "Display prompt sync history and ledger status")
+	_ = fs.Parse(args)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error determining working directory: %v\n", err)
+		os.Exit(1)
+	}
+	bankDir := filepath.Join(cwd, core.MemoryBankDir)
+
+	if *statusFlag {
+		ledger, err := syncpkg.GetLedger(bankDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("=== CTXbank Prompt Sync Ledger ===")
+		fmt.Printf("Total Syncs Run:    %d\n", ledger.TotalSyncs)
+		fmt.Printf("Current Status:      %s\n", ledger.Status)
+		if !ledger.LastSyncTime.IsZero() {
+			fmt.Printf("Last Sync Time:      %s\n", ledger.LastSyncTime.Local().Format(time.RFC1123))
+		}
+		if ledger.LastCheckpointID != "" {
+			fmt.Printf("Last Pre-Sync Ckpt:  %s\n", ledger.LastCheckpointID)
+		}
+		if ledger.LastAgentResult != "" {
+			fmt.Printf("Last Agent Result:   %s\n", ledger.LastAgentResult)
+		}
+		return
+	}
+
+	if *verifyFlag {
+		fmt.Println("Auditing memory bank population against quality standards & token budgets...")
+		res, err := syncpkg.VerifySyncCompletion(bankDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error verifying sync: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("\nFile Line Counts:")
+		for f, lines := range res.FileDetails {
+			fmt.Printf("  - %-20s: %d lines\n", f, lines)
+		}
+
+		if !res.Verified {
+			fmt.Println("\n[!] Verification Issues Found:")
+			for _, iss := range res.Issues {
+				fmt.Printf("  • %s\n", iss)
+			}
+			fmt.Println("\nAction Required: Ask your AI agent to address these items before proceeding.")
+			os.Exit(1)
+		}
+
+		fmt.Println("\n[✓] Memory Bank is 100% compliant! Zero placeholders, full architectural depth, and within budget.")
+		return
+	}
+
+	fmt.Println("Starting CTXbank Prompt Sync...")
+	fmt.Println("  1. Creating automated pre-sync safety checkpoint...")
+	res, err := syncpkg.GenerateSyncPrompt(cwd, bankDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating prompt sync: %v\n", err)
+		os.Exit(1)
+	}
+
+	if res.CheckpointID != "none" {
+		fmt.Printf("     ✓ Safe snapshot captured: %s\n", res.CheckpointID)
+	}
+	fmt.Println("  2. AST scanned & brownfield reconnaissance applied to techContext & systemPatterns.")
+	fmt.Printf("  3. Directive prompt saved to: %s\n", res.PromptFile)
+	fmt.Printf("\n[Prompt Sync #%d Active — Status: %s]\n", res.TotalSyncs, res.Status)
+	fmt.Println("\n=== NEXT STEPS FOR YOUR CODING AGENT ===")
+	fmt.Println("1. Copy or pass the prompt file to your AI agent (Cursor, Claude Code, Antigravity):")
+	fmt.Printf("   File: %s\n", res.PromptFile)
+	fmt.Println("2. Once the agent updates memory-bank/, run verification:")
+	fmt.Println("   ctx prompt-sync --verify")
+	fmt.Println("3. Or verify in 1 click inside the Web UI: ctx ui")
+}
+
 
 
 

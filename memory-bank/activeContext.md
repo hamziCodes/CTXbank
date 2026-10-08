@@ -1,18 +1,17 @@
-# Active Context — updated multi_track_expansion
+# Active Context — prompt_sync_engine_and_dropdown_fix
 
 ## Focus
-Multi-Track Expansion Complete: 1-Click Installers, Embedded VERTEX Web Dashboard, and Native VS Code / Cursor Extension fully implemented, packaged, and verified.
+Implemented the Prompt Sync Engine (automated pre-sync snapshots, AST code reconnaissance, structured AI directive prompt compilation, persistent sync counter ledger, and quality verification) and resolved the Project Selector dropdown modal hierarchy.
 
 ## Recent (last 3 checkpoints)
-- Track 1: Automated cross-platform GitHub Actions release matrix (`v0.1.0`), standalone tar.gz/zip binaries, and 1-click install scripts (`install.ps1`, `install.sh`).
-- Track 2: Embedded interactive Web Dashboard (`ctx ui` / `ctx dashboard`) with VERTEX Universal Design, SVG node-link architecture graph, real-time memory editor, and SimHash note ingestion.
-- Track 3: Native VS Code & Cursor extension (`extensions/vscode/`) with Activity Bar sidebar, status bar budget meter, architecture tree webview, and packaged `.vsix` uploaded to GitHub Release `v0.1.0`.
+- Prompt Sync Engine (`internal/sync/`): Automatic pre-sync snapshot capture, brownfield AST reconnaissance, AI directive compilation to `.context/prompts/agent_sync_prompt.md`, sync ledger persistence, and quality verification.
+- CLI & Web API Integration: Added `ctx prompt-sync [--verify|--status]` commands and REST endpoints (`/api/prompt-sync`, `/api/prompt-sync/status`, `/api/prompt-sync/verify`).
+- Web UI & Dropdown Fix: Fixed modal HTML nesting bug so the Project Selector dropdown (`📁 CTXbank ▾`) opens cleanly, added header Prompt Sync button with real-time spin animation and counter badge, and integrated interactive prompt modal with 1-click clipboard copy.
 
 ## Next steps
-1. Community distribution and feedback collection across GitHub, VS Code Marketplace, and developer forums.
-2. Extension publishing to Microsoft VS Code Marketplace and Open VSX Registry (via Personal Access Token).
-3. Continuous development with daily `ctx pause` and `ctx resume` workflows.
+1. Restart `ctx ui` dev server to bind newly compiled `/api/prompt-sync` Go REST handlers.
+2. Provide generated directive prompts to coding agents when tapping into fresh brownfield repositories.
+3. Track and verify agent-populated memory banks with `ctx prompt-sync --verify`.
 
 ## Open decisions
-- None. All 3 tracks are operational, packaged, and deployed.
-
+- None. All unit and API tests pass; static binary is verified at 11.33 MB (< 15MB limit).

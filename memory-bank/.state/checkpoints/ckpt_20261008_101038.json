@@ -1,0 +1,116 @@
+{
+  "id": "ckpt_20261008_101038",
+  "timestamp": "2026-10-08T10:10:38.9041666Z",
+  "branch": "main",
+  "head_commit": "2e845e5b846be67c3764fa0578ebfbc53fb5062b",
+  "commit_message": "feat(ui): add 1-click Sync Context button, automatic uninitialized project detection, and fix property mappings for graph and files",
+  "dirty_files": [
+    {
+      "path": "cmd/ctx/main.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/server.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/ui_test.go",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/app.js",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/index.html",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "internal/ui/web/style.css",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/.state/manifest.json",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/activeContext.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/decisionLog.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/productContext.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/progress.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/projectbrief.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/systemPatterns.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": "memory-bank/techContext.md",
+      "staging_status": " ",
+      "worktree_status": "M"
+    },
+    {
+      "path": ".context/prompts/",
+      "staging_status": "?",
+      "worktree_status": "?"
+    },
+    {
+      "path": "internal/sync/",
+      "staging_status": "?",
+      "worktree_status": "?"
+    },
+    {
+      "path": "memory-bank/.state/agent_sync_prompt.md",
+      "staging_status": "?",
+      "worktree_status": "?"
+    },
+    {
+      "path": "memory-bank/.state/checkpoints/ckpt_20260905_214931.json",
+      "staging_status": "?",
+      "worktree_status": "?"
+    },
+    {
+      "path": "memory-bank/.state/checkpoints/ckpt_20260905_215307.json",
+      "staging_status": "?",
+      "worktree_status": "?"
+    },
+    {
+      "path": "memory-bank/.state/prompt_sync.json",
+      "staging_status": "?",
+      "worktree_status": "?"
+    }
+  ],
+  "diff_stat": "cmd/ctx/main.go                  |  87 ++++++++++++++++++\n internal/ui/server.go            |  42 +++++++++\n internal/ui/ui_test.go           |  24 +++++\n internal/ui/web/app.js           | 190 ++++++++++++++++++++++++++++++++++++++-\n internal/ui/web/index.html       | 107 ++++++++++++++++++++++\n internal/ui/web/style.css        |  46 ++++++++++\n memory-bank/.state/manifest.json |  54 +++++------\n memory-bank/activeContext.md     |  19 ++--\n memory-bank/decisionLog.md       |  28 ++++--\n memory-bank/productContext.md    |  49 +++-------\n memory-bank/progress.md          |   8 +-\n memory-bank/projectbrief.md      |  21 +++--\n memory-bank/systemPatterns.md    |  40 +++++++--\n memory-bank/techContext.md       |  39 +++++---\n 14 files changed, 641 insertions(+), 113 deletions(-)",
+  "active_focus": "Pre-Prompt-Sync Snapshot: Automated safety backup before AI agent populates memory bank",
+  "next_steps": [
+    "Provide generated prompt to AI coding agent (Cursor, Claude Code, Antigravity)",
+    "Verify memory bank updates via 'ctx prompt-sync --verify' or Web UI"
+  ],
+  "manual_edits": null
+}

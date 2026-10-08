@@ -21,6 +21,7 @@ import (
 	"github.com/ctxbank/ctx/internal/git"
 	"github.com/ctxbank/ctx/internal/ingest"
 	"github.com/ctxbank/ctx/internal/linter"
+	syncpkg "github.com/ctxbank/ctx/internal/sync"
 	"github.com/ctxbank/ctx/internal/workspace"
 	"github.com/ctxbank/ctx/pkg/types"
 )
@@ -83,6 +84,9 @@ func (s *Server) Start(openBrowser bool) error {
 	mux.HandleFunc("/api/project/switch", s.handleProjectSwitch)
 	mux.HandleFunc("/api/project/init", s.handleProjectInit)
 	mux.HandleFunc("/api/sync", s.handleSync)
+	mux.HandleFunc("/api/prompt-sync", s.handlePromptSync)
+	mux.HandleFunc("/api/prompt-sync/status", s.handlePromptSyncStatus)
+	mux.HandleFunc("/api/prompt-sync/verify", s.handlePromptSyncVerify)
 
 	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
 	var fileSystem http.FileSystem
@@ -628,6 +632,44 @@ func (s *Server) handleProjectInit(w http.ResponseWriter, r *http.Request) {
 		"name":    filepath.Base(cleanPath),
 		"path":    cleanPath,
 	})
+}
+
+func (s *Server) handlePromptSync(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		respondError(w, http.StatusMethodNotAllowed, "POST required")
+		return
+	}
+	repoDir, bankDir := s.getPaths()
+	res, err := syncpkg.GenerateSyncPrompt(repoDir, bankDir)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, res)
+}
+
+func (s *Server) handlePromptSyncStatus(w http.ResponseWriter, r *http.Request) {
+	_, bankDir := s.getPaths()
+	ledger, err := syncpkg.GetLedger(bankDir)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, ledger)
+}
+
+func (s *Server) handlePromptSyncVerify(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		respondError(w, http.StatusMethodNotAllowed, "POST required")
+		return
+	}
+	_, bankDir := s.getPaths()
+	res, err := syncpkg.VerifySyncCompletion(bankDir)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, res)
 }
 
 func getBudgetStatus(lines int) string {
