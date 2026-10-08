@@ -101,6 +101,10 @@ curl -s -D - -o /dev/null "http://localhost:$PORT/api/status?token=$TOKEN" | gre
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS "http://localhost:$PORT/api/status" \
   -H "Origin: https://ctxbank.vertexdevstudio.tech" -H "Access-Control-Request-Method: GET")
 [ "$CODE" = "200" ] && ok "CORS preflight -> 200" || bad "preflight gave $CODE"
+curl -s -D - -o /dev/null -X OPTIONS "http://localhost:$PORT/api/status" \
+  -H "Origin: https://ctxbank.vertexdevstudio.tech" \
+  -H "Access-Control-Request-Private-Network: true" | grep -qi "access-control-allow-private-network: true" \
+  && ok "Private Network Access header present" || bad "PNA header missing"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/projects?token=$TOKEN")
 [ "$CODE" = "404" ] && ok "removed /api/projects -> 404" || bad "/api/projects gave $CODE"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:$PORT/api/file/save?token=$TOKEN" \

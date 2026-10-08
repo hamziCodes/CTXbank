@@ -85,11 +85,17 @@ func NewServer(repoDir string, port int) (*Server, error) {
 // probe the local dashboard from its Connect page. Auth still rests on the
 // project token — CORS alone grants nothing, since every /api/* call
 // without a valid token answers 401.
+//
+// Access-Control-Allow-Private-Network answers Chrome's Local Network
+// Access preflight: without it, an https page's fetch to this loopback
+// server fails silently in Chrome 142+. (Mixed content is not an issue:
+// loopback is a potentially-trustworthy origin, exempt from blocking.)
 func withCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "X-CTX-Token, Content-Type")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Private-Network", "true")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -162,13 +168,20 @@ func (s *Server) Start(openBrowser bool) error {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", s.Port))
 	if err != nil {
-		// Fallback to random free port
+		// Port taken: fall back to a random free port, but say so LOUDLY.
+		// A silent move breaks the website's Connect page, which probes
+		// the port the user expects.
+		requested := s.Port
 		listener, err = net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			return err
 		}
+		s.Port = listener.Addr().(*net.TCPAddr).Port
+		fmt.Printf("\n[!] Port %d was already in use — dashboard moved to port %d.\n", requested, s.Port)
+		fmt.Printf("    If you use the website's Connect page, enter port %d there.\n", s.Port)
+	} else {
+		s.Port = listener.Addr().(*net.TCPAddr).Port
 	}
-	s.Port = listener.Addr().(*net.TCPAddr).Port
 
 	url := fmt.Sprintf("http://localhost:%d?token=%s", s.Port, s.AuthToken)
 	fmt.Printf("\n[+] CTXbank dashboard live at %s\n", url)
