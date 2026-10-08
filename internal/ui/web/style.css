@@ -1143,6 +1143,20 @@ html.dark .file-name-title {
   to { transform: translateX(0); opacity: 1; }
 }
 
+/* Static project name in header (single-project dashboard; no switching) */
+.project-name-static {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-sunken);
+  border: 1px solid var(--app-line);
+  color: var(--app-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* Project Selector Button in Header */
 .project-selector-btn {
   display: inline-flex;

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERTEX/ctxbank — Your AI keeps forgetting. CTXbank remembers.</title>
+  <meta name="description" content="CTXbank is a simple, local-first memory bank for AI coding assistants. Never lose project context again. Free and open source.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%235B7A8C'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='monospace'>c</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="wordmark" href="#how" data-tab-link="how">
+        <span class="wordmark-vertex">VERTEX</span><span class="wordmark-slash">/</span><span class="wordmark-ctx">ctxbank</span>
+      </a>
+      <nav class="tabs" role="tablist" aria-label="Site sections">
+        <button class="tab active" role="tab" data-tab="how" aria-selected="true">How it works</button>
+        <button class="tab" role="tab" data-tab="setup" aria-selected="false">Set me up</button>
+        <button class="tab" role="tab" data-tab="connect" aria-selected="false">Connect</button>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <a class="btn btn-ghost" href="https://github.com/hamziCodes/CTXbank" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ TAB: HOW IT WORKS ============ -->
+    <section class="tab-panel active" id="panel-how" role="tabpanel" aria-label="How it works">
+      <div class="wrap">
+        <div class="hero reveal">
+          <p class="kicker">Local-first &middot; Open source (MIT) &middot; No account needed</p>
+          <h1>Your AI keeps forgetting.<br><span class="accent-text">CTXbank remembers.</span></h1>
+          <p class="lede">CTXbank is a small notebook that lives inside your project. It writes down what you're building, what you decided, and what to do next — so you (and your AI coding assistant) never start from zero again.</p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" data-tab-link="setup">Set me up &rarr;</button>
+            <button class="btn btn-secondary" data-tab-link="connect">Connect my dashboard</button>
+          </div>
+        </div>
+
+        <div class="section reveal">
+          <h2>The problem, in plain words</h2>
+          <div class="cards-3">
+            <div class="card float-1">
+              <div class="card-num">01</div>
+              <h3>AI amnesia</h3>
+              <p>Long chat with your AI assistant? It forgets decisions you made an hour ago and starts suggesting things you already rejected.</p>
+            </div>
+            <div class="card float-2">
+              <div class="card-num">02</div>
+              <h3>The Monday problem</h3>
+              <p>You close the laptop on Friday. On Monday, neither you nor the AI remembers where the work stopped.</p>
+            </div>
+            <div class="card float-3">
+              <div class="card-num">03</div>
+              <h3>Token burn</h3>
+              <p>Every new chat re-reads your whole codebase just to fix one bug. That's thousands of tokens — and money — wasted on files that never changed.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section reveal">
+          <h2>How it works, at a glance</h2>
+          <p class="section-sub">Four ideas. That's the whole system.</p>
+          <div class="flow">
+            <div class="flow-step">
+              <div class="flow-dot">1</div>
+              <div class="flow-card">
+                <h3>The notebook</h3>
+                <p><code>ctx init</code> creates a <code>memory-bank/</code> folder: seven small text files describing your project — what it is, how it's built, what you're doing now, what's next.</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot">2</div>
+              <div class="flow-card">
+                <h3>The save button</h3>
+                <p>Done for the day? Run <code>ctx pause</code>. It snapshots your git state and notes, like a save point in a game. <code>ctx resume</code> brings you back in five seconds.</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot">3</div>
+              <div class="flow-card">
+                <h3>The smart reader</h3>
+                <p>Your AI talks to CTXbank through a local server. If nothing changed, it gets a tiny <code>{"unchanged": true}</code> reply instead of re-reading everything. That's the token savings.</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="flow-dot">4</div>
+              <div class="flow-card">
+                <h3>Your dashboard</h3>
+                <p><code>ctx ui</code> opens a visual dashboard on your own machine: edit the notebook, browse checkpoints, run audits. Each project has its own private token.</p>
+              </div>
+            </div>
+            <svg class="flow-line" viewBox="0 0 100 400" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="50" y1="0" x2="50" y2="400" class="flow-dash"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="section reveal">
+          <h2>What is what</h2>
+          <p class="section-sub">The vocabulary, in one line each.</p>
+          <dl class="glossary">
+            <div><dt><code>memory-bank/</code></dt><dd>Seven markdown files. The project's notebook. Human-readable, lives in your repo.</dd></div>
+            <div><dt>Checkpoint</dt><dd>A save point: git state + your notes + what to do next, frozen in time.</dd></div>
+            <div><dt>MCP server</dt><dd>The local bridge your AI assistant uses to read the notebook without re-reading your code.</dd></div>
+            <div><dt>Project token</dt><dd>A private key for one project. It unlocks that project's dashboard. Created by <code>ctx token</code>.</dd></div>
+            <div><dt>Dashboard</dt><dd>The visual app at <code>localhost:4242</code>. Runs on your machine, nowhere else.</dd></div>
+          </dl>
+        </div>
+
+        <div class="section reveal">
+          <div class="band">
+            <h2>Nothing leaves your machine</h2>
+            <p>CTXbank has no accounts, no cloud, no tracking. The dashboard runs on <code>localhost</code>, your notes stay in your repo, and the whole thing is MIT-licensed open source. If you can read code, you can audit everything it does.</p>
+            <div class="band-cta">
+              <button class="btn btn-primary" data-tab-link="setup">Set me up &rarr;</button>
+              <a class="btn btn-ghost" href="https://github.com/hamziCodes/CTXbank" target="_blank" rel="noopener">Read the source</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB: SET ME UP ============ -->
+    <section class="tab-panel" id="panel-setup" role="tabpanel" aria-label="Set me up" hidden>
+      <div class="wrap narrow">
+        <div class="page-head reveal">
+          <h1>Set me up</h1>
+          <p class="lede">Five steps, about two minutes. At the end you'll have a project token — that's your key to the dashboard.</p>
+        </div>
+
+        <ol class="steps">
+          <li class="step reveal">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Install CTXbank</h3>
+              <p>Pick one. macOS or Linux:</p>
+              <div class="codeblock"><code>curl -fsSL https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.sh | sh</code><button class="copy-btn" data-copy="curl -fsSL https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.sh | sh">Copy</button></div>
+              <p>Windows (PowerShell):</p>
+              <div class="codeblock"><code>irm https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.ps1 | iex</code><button class="copy-btn" data-copy="irm https://raw.githubusercontent.com/hamziCodes/CTXbank/main/scripts/install.ps1 | iex">Copy</button></div>
+              <p>Or, if you have Go:</p>
+              <div class="codeblock"><code>go install github.com/hamziCodes/CTXbank/cmd/ctx@latest</code><button class="copy-btn" data-copy="go install github.com/hamziCodes/CTXbank/cmd/ctx@latest">Copy</button></div>
+              <p class="note">An <code>npm i -g ctxbank</code> / <code>npx</code> package is coming soon.</p>
+            </div>
+          </li>
+
+          <li class="step reveal">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Start the notebook in your project</h3>
+              <p>Open a terminal <em>inside your project folder</em> and run:</p>
+              <div class="codeblock"><code>ctx init</code><button class="copy-btn" data-copy="ctx init">Copy</button></div>
+              <p>This creates the <code>memory-bank/</code> folder with blank templates. If your project already has code, run <code>ctx audit --apply</code> and CTXbank will fill in the tech details automatically.</p>
+            </div>
+          </li>
+
+          <li class="step reveal">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Get your project token</h3>
+              <p>This is the important one. Your token is a private key for <em>this project only</em>. You'll paste it on the Connect page to open your dashboard.</p>
+              <div class="codeblock"><code>ctx token</code><button class="copy-btn" data-copy="ctx token">Copy</button></div>
+              <p>Copy the token it prints and keep it somewhere safe, like a password manager. Lost it or shared it by accident? <code>ctx token --regenerate</code> makes a new one and kills the old.</p>
+            </div>
+          </li>
+
+          <li class="step reveal">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h3>Launch your dashboard</h3>
+              <div class="codeblock"><code>ctx ui</code><button class="copy-btn" data-copy="ctx ui">Copy</button></div>
+              <p>This starts the dashboard on your own machine (<code>http://localhost:4242</code>) and opens it in your browser. Leave the terminal running while you use it; press <code>Ctrl+C</code> to stop.</p>
+            </div>
+          </li>
+
+          <li class="step reveal">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <h3>Connect</h3>
+              <p>Go to the <button class="linklike" data-tab-link="connect">Connect</button> tab, paste your project token, and open your dashboard. From now on, everything you do — checkpoints, notes, audits — shows up there.</p>
+              <button class="btn btn-primary" data-tab-link="connect">Go to Connect &rarr;</button>
+            </div>
+          </li>
+        </ol>
+
+        <div class="section">
+          <h2>Everyday commands</h2>
+          <div class="cmd-grid">
+            <div class="cmd"><code>ctx status</code><span>Where am I? Branch, dirty files, current focus.</span></div>
+            <div class="cmd"><code>ctx pause</code><span>Save point. Snapshots everything, asks for a quick note.</span></div>
+            <div class="cmd"><code>ctx resume</code><span>Pick up instantly. Prints what you were doing.</span></div>
+            <div class="cmd"><code>ctx doctor</code><span>Something wrong? Self-checks your whole setup.</span></div>
+            <div class="cmd"><code>ctx lint-memory</code><span>Keeps your notebook small and readable.</span></div>
+            <div class="cmd"><code>ctx serve --mcp</code><span>Starts the bridge your AI assistant connects to.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TAB: CONNECT ============ -->
+    <section class="tab-panel" id="panel-connect" role="tabpanel" aria-label="Connect" hidden>
+      <div class="wrap narrow">
+        <div class="page-head reveal">
+          <h1>Connect your dashboard</h1>
+          <p class="lede">Your dashboard runs on <em>your</em> machine. Paste your project token below and this page will reach out to it — nothing is sent anywhere else.</p>
+        </div>
+
+        <div class="connect-card reveal">
+          <label class="field">
+            <span class="field-label">Project token</span>
+            <input type="password" id="connect-token" class="input font-mono" placeholder="paste your token from ctx token" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="field">
+            <span class="field-label">Local port <span class="field-hint">(only change this if you ran ctx ui --port …)</span></span>
+            <input type="number" id="connect-port" class="input font-mono" value="4242" min="1" max="65535">
+          </label>
+          <div class="connect-actions">
+            <button class="btn btn-secondary" id="btn-test-connection">Test connection</button>
+            <button class="btn btn-primary" id="btn-open-dashboard" disabled>Open dashboard &rarr;</button>
+          </div>
+          <div class="connect-status" id="connect-status" role="status" aria-live="polite">
+            <span class="status-idle">Enter your token and test the connection. Your dashboard must be running (<code>ctx ui</code>).</span>
+          </div>
+          <p class="no-token">Don't have a token? <button class="linklike" data-tab-link="setup">Generate one</button> — it takes two minutes: install CTXbank, run <code>ctx init</code>, then <code>ctx token</code>.</p>
+        </div>
+
+        <div class="section">
+          <h2>How the connection works</h2>
+          <div class="cards-3">
+            <div class="card"><div class="card-num">1</div><h3>You paste the token</h3><p>It stays in this page. It's sent only to <code>localhost</code> — your own computer — never to us.</p></div>
+            <div class="card"><div class="card-num">2</div><h3>We knock on your dashboard</h3><p>"Test connection" asks your local dashboard for its status. If the token matches, it answers with your project name.</p></div>
+            <div class="card"><div class="card-num">3</div><h3>You open it</h3><p>"Open dashboard" launches your local dashboard in a new tab. Everything you do there is reflected instantly — it's the same app.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <span><span class="wordmark-vertex">VERTEX</span><span class="wordmark-slash">/</span><span class="wordmark-ctx">ctxbank</span></span>
+      <span class="footer-note">Free and open source (MIT). Your data never leaves your machine.</span>
+      <a href="https://github.com/hamziCodes/CTXbank" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

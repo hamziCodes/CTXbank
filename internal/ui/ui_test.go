@@ -17,7 +17,10 @@ func TestUIServerAPIRoutes(t *testing.T) {
 		t.Fatalf("InitBank failed: %v", err)
 	}
 
-	server := NewServer(tempWorkspace, 0)
+	server, srvErr := NewServer(tempWorkspace, 0)
+	if srvErr != nil {
+		t.Fatalf("NewServer failed: %v", srvErr)
+	}
 
 	// Test /api/status handler
 	req := httptest.NewRequest(http.MethodGet, "/api/status", nil)
@@ -73,22 +76,6 @@ func TestUIServerAPIRoutes(t *testing.T) {
 		t.Errorf("expected filename projectbrief.md, got %v", fileResp["filename"])
 	}
 
-	// Test /api/projects handler
-	reqProjects := httptest.NewRequest(http.MethodGet, "/api/projects", nil)
-	wProjects := httptest.NewRecorder()
-	server.handleProjects(wProjects, reqProjects)
-	if wProjects.Code != http.StatusOK {
-		t.Errorf("expected 200 OK from /api/projects, got %d", wProjects.Code)
-	}
-
-	// Test /api/project/inspect handler
-	reqInspect := httptest.NewRequest(http.MethodGet, "/api/project/inspect?path="+tempWorkspace, nil)
-	wInspect := httptest.NewRecorder()
-	server.handleProjectInspect(wInspect, reqInspect)
-	if wInspect.Code != http.StatusOK {
-		t.Errorf("expected 200 OK from /api/project/inspect, got %d", wInspect.Code)
-	}
-
 	// Test /api/prompt-sync handler
 	reqPromptSync := httptest.NewRequest(http.MethodPost, "/api/prompt-sync", nil)
 	wPromptSync := httptest.NewRecorder()
@@ -120,7 +107,10 @@ func TestRequireAuthMiddleware(t *testing.T) {
 	if err := core.InitBank(tempWorkspace, false); err != nil {
 		t.Fatalf("InitBank failed: %v", err)
 	}
-	server := NewServer(tempWorkspace, 0)
+	server, srvErr := NewServer(tempWorkspace, 0)
+	if srvErr != nil {
+		t.Fatalf("NewServer failed: %v", srvErr)
+	}
 	if server.AuthToken == "" {
 		t.Fatal("expected a generated auth token")
 	}
@@ -165,7 +155,10 @@ func TestFileSaveWhitelist(t *testing.T) {
 	if err := core.InitBank(tempWorkspace, false); err != nil {
 		t.Fatalf("InitBank failed: %v", err)
 	}
-	server := NewServer(tempWorkspace, 0)
+	server, srvErr := NewServer(tempWorkspace, 0)
+	if srvErr != nil {
+		t.Fatalf("NewServer failed: %v", srvErr)
+	}
 
 	postSave := func(filename, content string) *httptest.ResponseRecorder {
 		body := `{"filename":` + quoteJSON(filename) + `,"content":` + quoteJSON(content) + `}`

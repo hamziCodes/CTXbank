@@ -66,20 +66,37 @@ echo "== Fix 10: recent-projects registry =="
 "$CTX" list | grep -q "demo-proj" && ok "ctx list shows project from registry" || bad "ctx list registry"
 "$CTX" list --json | grep -q "demo-proj" && ok "ctx list --json" || bad "ctx list --json"
 
-echo "== Fix 5: dashboard auth token =="
+echo "== Project token model =="
+grep -q "memory-bank/.state/" .gitignore && ok ".gitignore covers memory-bank/.state/" || bad ".gitignore"
+T1=$("$CTX" token | grep -oE "[0-9a-f]{32}" | head -1)
+T2=$("$CTX" token | grep -oE "[0-9a-f]{32}" | head -1)
+[ -n "$T1" ] && [ "$T1" = "$T2" ] && ok "ctx token is stable across calls" || bad "ctx token unstable"
+T3=$("$CTX" token --regenerate | grep -oE "[0-9a-f]{32}" | head -1)
+[ -n "$T3" ] && [ "$T3" != "$T1" ] && ok "ctx token --regenerate rotates" || bad "regenerate failed"
+TOKEN="$T3"
+PERM=$(stat -c "%a" memory-bank/.state/dashboard_token 2>/dev/null || stat -f "%Lp" memory-bank/.state/dashboard_token)
+[ "$PERM" = "600" ] && ok "token file is 0600" || bad "token file perms $PERM"
+
+echo "== Fix 5: dashboard auth (project token) =="
 PORT=$(python3 -c "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print(s.getsockname()[1]); s.close()")
 "$CTX" ui --no-open --port "$PORT" >"$WORK/ui.log" 2>&1 &
 UIPID=$!
 sleep 2
-URL=$(grep -o "http://localhost:$PORT?token=[a-f0-9]*" "$WORK/ui.log" | head -1)
-TOKEN=$(echo "$URL" | sed 's/.*token=//')
-if [ -z "$TOKEN" ]; then bad "no token printed"; else ok "token printed in terminal"; fi
+URLTOKEN=$(grep -o "http://localhost:$PORT?token=[a-f0-9]*" "$WORK/ui.log" | sed 's/.*token=//' | head -1)
+[ "$URLTOKEN" = "$TOKEN" ] && ok "dashboard uses the project token" || bad "dashboard token mismatch"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/status")
 [ "$CODE" = "401" ] && ok "API without token -> 401" || bad "no-token gave $CODE"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/status?token=$TOKEN")
 [ "$CODE" = "200" ] && ok "API with token -> 200" || bad "token gave $CODE"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "X-CTX-Token: $TOKEN" "http://localhost:$PORT/api/files")
 [ "$CODE" = "200" ] && ok "API with header token -> 200" || bad "header token gave $CODE"
+curl -s -D - -o /dev/null "http://localhost:$PORT/api/status?token=$TOKEN" | grep -qi "access-control-allow-origin: \*" \
+  && ok "CORS header present for Connect page" || bad "CORS header missing"
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS "http://localhost:$PORT/api/status" \
+  -H "Origin: https://ctxbank.vertexdevstudio.tech" -H "Access-Control-Request-Method: GET")
+[ "$CODE" = "200" ] && ok "CORS preflight -> 200" || bad "preflight gave $CODE"
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/api/projects?token=$TOKEN")
+[ "$CODE" = "404" ] && ok "removed /api/projects -> 404" || bad "/api/projects gave $CODE"
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:$PORT/api/file/save?token=$TOKEN" \
   -d '{"filename":"evil.json","content":"x"}')
 [ "$CODE" = "400" ] && ok "evil.json save -> 400" || bad "evil.json gave $CODE"

@@ -1,10 +1,8 @@
 package ui
 
 import (
-	"crypto/rand"
 	"crypto/subtle"
 	"embed"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -25,7 +23,6 @@ import (
 	"github.com/hamziCodes/CTXbank/internal/ingest"
 	"github.com/hamziCodes/CTXbank/internal/linter"
 	syncpkg "github.com/hamziCodes/CTXbank/internal/sync"
-	"github.com/hamziCodes/CTXbank/internal/workspace"
 	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
@@ -45,38 +42,54 @@ var writableMemoryFiles = map[string]bool{
 }
 
 // Server hosts the CTXbank local interactive web dashboard.
+// One server = one project. There is no project switching: the dashboard
+// serves the repository it was launched in, gated by that project's
+// persistent dashboard token (`ctx token`).
 type Server struct {
 	mu      sync.RWMutex
 	RepoDir string
 	BankDir string
 	Port    int
-	// AuthToken is a per-launch random secret required by every /api/*
-	// endpoint (query ?token= or X-CTX-Token header). It prevents other
-	// local processes — and drive-by websites hitting 127.0.0.1 — from
-	// mutating the memory bank through the dashboard.
+	// AuthToken is this project's persistent dashboard token, required by
+	// every /api/* endpoint (query ?token= or X-CTX-Token header). It
+	// prevents other local processes — and drive-by websites hitting
+	// 127.0.0.1 — from reading or mutating the memory bank.
 	AuthToken string
 }
 
-// generateAuthToken returns a fresh 128-bit random hex token.
-func generateAuthToken() string {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		return fmt.Sprintf("fallback-%d", time.Now().UnixNano())
-	}
-	return hex.EncodeToString(b)
-}
-
-// NewServer initializes a dashboard server for the target repository.
-func NewServer(repoDir string, port int) *Server {
+// NewServer initializes a dashboard server for the target repository,
+// loading (or creating) the project's persistent dashboard token.
+func NewServer(repoDir string, port int) (*Server, error) {
 	if port <= 0 {
 		port = 4242
 	}
 	bankDir := filepath.Join(repoDir, core.MemoryBankDir)
+	token, err := core.GetProjectToken(bankDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load project token: %w", err)
+	}
 	return &Server{
 		RepoDir:   repoDir,
 		BankDir:   bankDir,
 		Port:      port,
-		AuthToken: generateAuthToken(),
+		AuthToken: token,
+	}, nil
+}
+
+// withCORS allows the hosted site (e.g. ctxbank.vertexdevstudio.tech) to
+// probe the local dashboard from its Connect page. Auth still rests on the
+// project token — CORS alone grants nothing, since every /api/* call
+// without a valid token answers 401.
+func withCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "X-CTX-Token, Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next(w, r)
 	}
 }
 
@@ -103,37 +116,30 @@ func (s *Server) getPaths() (string, string) {
 	return s.RepoDir, s.BankDir
 }
 
-func (s *Server) setRepoDir(newRepo string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.RepoDir = newRepo
-	s.BankDir = filepath.Join(newRepo, core.MemoryBankDir)
-}
-
 // Start binds to localhost, serves the API and embedded UI, and opens the default browser.
 func (s *Server) Start(openBrowser bool) error {
 	mux := http.NewServeMux()
 
-	// API Routes — all guarded by the per-launch auth token.
-	mux.HandleFunc("/api/status", s.requireAuth(s.handleStatus))
-	mux.HandleFunc("/api/files", s.requireAuth(s.handleFiles))
-	mux.HandleFunc("/api/file", s.requireAuth(s.handleFileGet))
-	mux.HandleFunc("/api/file/save", s.requireAuth(s.handleFileSave))
-	mux.HandleFunc("/api/graph", s.requireAuth(s.handleGraph))
-	mux.HandleFunc("/api/checkpoints", s.requireAuth(s.handleCheckpoints))
-	mux.HandleFunc("/api/checkpoint/create", s.requireAuth(s.handleCheckpointCreate))
-	mux.HandleFunc("/api/audit", s.requireAuth(s.handleAudit))
-	mux.HandleFunc("/api/lint", s.requireAuth(s.handleLint))
-	mux.HandleFunc("/api/ingest/preview", s.requireAuth(s.handleIngestPreview))
-	mux.HandleFunc("/api/ingest/commit", s.requireAuth(s.handleIngestCommit))
-	mux.HandleFunc("/api/projects", s.requireAuth(s.handleProjects))
-	mux.HandleFunc("/api/project/inspect", s.requireAuth(s.handleProjectInspect))
-	mux.HandleFunc("/api/project/switch", s.requireAuth(s.handleProjectSwitch))
-	mux.HandleFunc("/api/project/init", s.requireAuth(s.handleProjectInit))
-	mux.HandleFunc("/api/sync", s.requireAuth(s.handleSync))
-	mux.HandleFunc("/api/prompt-sync", s.requireAuth(s.handlePromptSync))
-	mux.HandleFunc("/api/prompt-sync/status", s.requireAuth(s.handlePromptSyncStatus))
-	mux.HandleFunc("/api/prompt-sync/verify", s.requireAuth(s.handlePromptSyncVerify))
+	// API Routes — all guarded by the project token, with CORS so the
+	// hosted Connect page can probe this local dashboard.
+	api := func(h http.HandlerFunc) http.HandlerFunc {
+		return withCORS(s.requireAuth(h))
+	}
+	mux.HandleFunc("/api/status", api(s.handleStatus))
+	mux.HandleFunc("/api/files", api(s.handleFiles))
+	mux.HandleFunc("/api/file", api(s.handleFileGet))
+	mux.HandleFunc("/api/file/save", api(s.handleFileSave))
+	mux.HandleFunc("/api/graph", api(s.handleGraph))
+	mux.HandleFunc("/api/checkpoints", api(s.handleCheckpoints))
+	mux.HandleFunc("/api/checkpoint/create", api(s.handleCheckpointCreate))
+	mux.HandleFunc("/api/audit", api(s.handleAudit))
+	mux.HandleFunc("/api/lint", api(s.handleLint))
+	mux.HandleFunc("/api/ingest/preview", api(s.handleIngestPreview))
+	mux.HandleFunc("/api/ingest/commit", api(s.handleIngestCommit))
+	mux.HandleFunc("/api/sync", api(s.handleSync))
+	mux.HandleFunc("/api/prompt-sync", api(s.handlePromptSync))
+	mux.HandleFunc("/api/prompt-sync/status", api(s.handlePromptSyncStatus))
+	mux.HandleFunc("/api/prompt-sync/verify", api(s.handlePromptSyncVerify))
 
 	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
 	var fileSystem http.FileSystem
@@ -160,9 +166,10 @@ func (s *Server) Start(openBrowser bool) error {
 	s.Port = listener.Addr().(*net.TCPAddr).Port
 
 	url := fmt.Sprintf("http://localhost:%d?token=%s", s.Port, s.AuthToken)
-	fmt.Printf("\n[+] CTXbank Interactive Dashboard live at %s\n", url)
-	fmt.Println("    Dashboard token is required for all API access (embedded in the URL above).")
-	fmt.Println("    Do not share this URL — it grants write access to your memory bank.")
+	fmt.Printf("\n[+] CTXbank dashboard live at %s\n", url)
+	fmt.Println("    Project token is required for all API access (embedded in the URL above).")
+	fmt.Println("    Keep it private — it grants read/write access to this project's memory bank.")
+	fmt.Println("    Or connect via the hosted site: https://ctxbank.vertexdevstudio.tech/#connect")
 	fmt.Println("    Press Ctrl+C to stop the dashboard server.")
 
 	if openBrowser {
@@ -569,126 +576,6 @@ func (s *Server) handleIngestCommit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"status": "committed", "target": prop.TargetFile})
-}
-
-func (s *Server) handleProjects(w http.ResponseWriter, r *http.Request) {
-	repoDir, _ := s.getPaths()
-	parentDir := filepath.Dir(repoDir)
-	discovered, _ := workspace.ScanWorkspaces(parentDir, 2)
-
-	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"current_project": filepath.Base(repoDir),
-		"current_path":    repoDir,
-		"discovered":      discovered,
-	})
-}
-
-func (s *Server) handleProjectInspect(w http.ResponseWriter, r *http.Request) {
-	targetPath := r.URL.Query().Get("path")
-	if targetPath == "" {
-		respondError(w, http.StatusBadRequest, "path parameter required")
-		return
-	}
-	cleanPath := filepath.Clean(targetPath)
-	fi, err := os.Stat(cleanPath)
-	if err != nil || !fi.IsDir() {
-		respondError(w, http.StatusNotFound, "directory does not exist")
-		return
-	}
-
-	manifestPath := filepath.Join(cleanPath, core.MemoryBankDir, core.StateDirname, core.ManifestFilename)
-	hasBank := false
-	if _, err := os.Stat(manifestPath); err == nil {
-		hasBank = true
-	}
-
-	branch, _ := git.GetCurrentBranch(cleanPath)
-	dirty, _ := git.GetStatus(cleanPath)
-
-	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"name":        filepath.Base(cleanPath),
-		"path":        cleanPath,
-		"has_bank":    hasBank,
-		"branch":      branch,
-		"dirty_count": len(dirty),
-	})
-}
-
-func (s *Server) handleProjectSwitch(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		respondError(w, http.StatusMethodNotAllowed, "POST required")
-		return
-	}
-
-	var req struct {
-		Path string `json:"path"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
-		respondError(w, http.StatusBadRequest, "invalid path")
-		return
-	}
-	cleanPath := filepath.Clean(req.Path)
-	fi, err := os.Stat(cleanPath)
-	if err != nil || !fi.IsDir() {
-		respondError(w, http.StatusNotFound, "directory does not exist")
-		return
-	}
-
-	manifestPath := filepath.Join(cleanPath, core.MemoryBankDir, core.StateDirname, core.ManifestFilename)
-	if _, err := os.Stat(manifestPath); err != nil {
-		respondError(w, http.StatusBadRequest, "project has not been initialized with CTXbank yet")
-		return
-	}
-
-	s.setRepoDir(cleanPath)
-	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-		"name":    filepath.Base(cleanPath),
-		"path":    cleanPath,
-	})
-}
-
-func (s *Server) handleProjectInit(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		respondError(w, http.StatusMethodNotAllowed, "POST required")
-		return
-	}
-
-	var req struct {
-		Path string `json:"path"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
-		respondError(w, http.StatusBadRequest, "invalid path")
-		return
-	}
-	cleanPath := filepath.Clean(req.Path)
-	fi, err := os.Stat(cleanPath)
-	if err != nil || !fi.IsDir() {
-		respondError(w, http.StatusNotFound, "directory does not exist")
-		return
-	}
-
-	// 1. Initialize Memory Bank
-	if err := core.InitBank(cleanPath, false); err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to initialize memory bank: "+err.Error())
-		return
-	}
-
-	// 2. Run Reconnaissance Audit & apply
-	bankDir := filepath.Join(cleanPath, core.MemoryBankDir)
-	report, err := audit.RunAudit(cleanPath)
-	if err == nil && report != nil {
-		_ = audit.ApplyAudit(bankDir, report)
-	}
-
-	// 3. Switch active workspace to this project
-	s.setRepoDir(cleanPath)
-
-	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-		"name":    filepath.Base(cleanPath),
-		"path":    cleanPath,
-	})
 }
 
 func (s *Server) handlePromptSync(w http.ResponseWriter, r *http.Request) {

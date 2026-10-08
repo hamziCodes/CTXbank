@@ -63,6 +63,8 @@ func main() {
 		runDoctor(os.Args[2:])
 	case "completion":
 		runCompletion(os.Args[2:])
+	case "token":
+		runToken(os.Args[2:])
 	case "--version", "-v", "version":
 		fmt.Printf("ctx version %s\n", Version)
 	case "--help", "-h", "help":
@@ -96,6 +98,8 @@ Commands:
   doctor          Self-check: binary, git, memory-bank, manifest drift
   completion <shell>
                 Print shell completions (bash, zsh, fish, powershell)
+  token [--regenerate]
+                Show this project's dashboard token (used by the Connect page)
 
 Flags:
   --help, -h      Show this help message
@@ -130,6 +134,17 @@ func runInit(args []string) {
 	if err := workspace.RecordProject(cwd); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not record project in registry: %v\n", err)
 	}
+
+	// Every project gets its own dashboard token, and the machine-state
+	// directory (token, manifest, checkpoints) is never committed.
+	bankDir := filepath.Join(cwd, core.MemoryBankDir)
+	if token, err := core.GetProjectToken(bankDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not create project token: %v\n", err)
+	} else {
+		fmt.Printf("\nProject dashboard token (keep private):\n\n  %s\n\n", token)
+		fmt.Println("You'll paste this on the Connect page to open this project's dashboard.")
+	}
+	core.EnsureStateGitignored(cwd)
 
 	fmt.Println("Initialization complete: memory-bank/ scaffolded with crash-safe atomic engine.")
 }
@@ -587,7 +602,20 @@ func runUI(args []string) {
 		fmt.Fprintf(os.Stderr, "Warning: could not record project in registry: %v\n", err)
 	}
 
-	server := ui.NewServer(cwd, *portFlag)
+	// The dashboard needs a memory bank (it hosts the project token).
+	if _, err := os.Stat(filepath.Join(cwd, core.MemoryBankDir)); os.IsNotExist(err) {
+		fmt.Println("No memory-bank found here — initializing first.")
+		if err := core.InitBank(cwd, false); err != nil {
+			fmt.Fprintf(os.Stderr, "Error initializing memory bank: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	server, err := ui.NewServer(cwd, *portFlag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Dashboard error: %v\n", err)
+		os.Exit(1)
+	}
 	if err := server.Start(!*noOpenFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Dashboard server error: %v\n", err)
 		os.Exit(1)

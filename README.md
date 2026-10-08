@@ -90,7 +90,7 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 
 | Command | What it does |
 |---|---|
-| `ctx ui` (or `ctx dashboard`) | Launches the embedded web dashboard with interactive architecture graphs. A per-launch token is printed in the terminal and embedded in the URL — all API calls require it. |
+| `ctx ui` (or `ctx dashboard`) | Launches this project's local web dashboard. Your project token is embedded in the URL — all API calls require it. |
 | `ctx status` | Shows a clean terminal card with your git branch, dirty files, and current focus. |
 | `ctx pause [--note "…"] [--focus "…"]` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
 | `ctx resume` | Prints an instant summary of what you were working on so you can pick up immediately. |
@@ -101,24 +101,27 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 | `ctx prompt-sync` | Generates an AI directive prompt so your agent can populate the memory bank, then verifies the result. |
 | `ctx doctor` | Self-check: binary, git, memory-bank health, manifest drift — plus the MCP snippet for your editor. |
 | `ctx completion <shell>` | Prints shell completions (bash, zsh, fish, powershell). |
+| `ctx token [--regenerate]` | Shows this project's dashboard token (paste it on the Connect page). |
 | `ctx serve --mcp` | Starts the background server so AI tools can talk to CTXbank directly. |
 
 ---
 
 ## Interactive Visual Interfaces
 
-CTXbank offers two rich, zero-learning-curve visual interfaces built to the high-precision **VERTEX Universal Design System**:
+CTXbank offers two rich, zero-learning-curve visual interfaces:
 
-### 1. Embedded Web Dashboard (`ctx ui`)
-Run a single command in your terminal:
+### 1. Local Web Dashboard (`ctx ui`)
+One dashboard per project, running entirely on your machine. Run a single command in your terminal:
 ```bash
 ctx ui
 ```
-This instantly boots an embedded local web dashboard (served directly from the static binary on `http://localhost:4242`) with:
+This instantly boots a local web dashboard (served directly from the static binary on `http://localhost:4242`) with:
 - **Interactive SVG Architecture Graph:** Clickable nodes representing core components, test suites, and memory files with live line counts and status rings.
 - **Visual Memory Cards:** Live preview and tabbed editor for all 7 memory bank files with real-time budget meter warning before hitting line limits.
 - **Drag-and-Drop Ingestion:** Drop meeting notes, markdown brainstorms, or research documents into the browser to auto-deduplicate (SimHash) and merge into memory files.
 - **Checkpoint Manager:** 1-click snapshot creation, rollback preview, and branch audit timeline.
+
+**Project tokens:** every project gets its own dashboard token — a private key printed by `ctx init` and retrievable anytime with `ctx token`. The dashboard requires it on every request, so nothing else on your machine (or a stray browser tab) can touch your memory bank. Paste the token on the [Connect page](https://ctxbank.vertexdevstudio.tech/#connect) to open your local dashboard from the website. Lost it? `ctx token --regenerate` makes a new one.
 
 ### 2. Native VS Code & Cursor Extension
 Install the official extension directly in VS Code or Cursor — download the `.vsix` first (`code --install-extension` does not accept URLs):

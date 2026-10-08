@@ -11,7 +11,7 @@ var ctxCommands = []string{
 	"init", "status", "ui", "dashboard", "list",
 	"pause", "checkpoint", "resume", "audit", "ingest",
 	"lint-memory", "lint", "prompt-sync", "sync-prompt",
-	"serve", "doctor", "completion", "version", "help",
+	"serve", "doctor", "completion", "token", "version", "help",
 }
 
 var bashCompletion = `# ctx bash completion — install: ctx completion bash > /etc/bash_completion.d/ctx
@@ -31,6 +31,7 @@ _ctx_completions() {
         prompt-sync|sync-prompt) COMPREPLY=($(compgen -W "--verify --status --help" -- "$cur")); return 0 ;;
         serve) COMPREPLY=($(compgen -W "--mcp --help" -- "$cur")); return 0 ;;
         completion) COMPREPLY=($(compgen -W "bash zsh fish powershell" -- "$cur")); return 0 ;;
+        token) COMPREPLY=($(compgen -W "--regenerate --help" -- "$cur")); return 0 ;;
     esac
     COMPREPLY=($(compgen -W "--help" -- "$cur"))
 }
@@ -58,6 +59,7 @@ _ctx() {
                 prompt-sync|sync-prompt) _arguments '--verify[verify]' '--status[ledger status]' ;;
                 serve) _arguments '--mcp[start MCP server]' ;;
                 completion) _arguments '1:shell:(bash zsh fish powershell)' ;;
+                token) _arguments '--regenerate[rotate the project token]' ;;
             esac ;;
     esac
 }
@@ -87,6 +89,7 @@ complete -c ctx -f -n '__fish_seen_subcommand_from prompt-sync' -l verify -d 'Ve
 complete -c ctx -f -n '__fish_seen_subcommand_from prompt-sync' -l status -d 'Ledger status'
 complete -c ctx -f -n '__fish_seen_subcommand_from serve' -l mcp -d 'Start MCP server'
 complete -c ctx -f -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish powershell'
+complete -c ctx -f -n '__fish_seen_subcommand_from token' -l regenerate -d 'Rotate the project token'
 `
 
 var powershellCompletion = `# ctx PowerShell completion — install: ctx completion powershell >> $PROFILE
