@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 func TestLintMemoryCompliant(t *testing.T) {

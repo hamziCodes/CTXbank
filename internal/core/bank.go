@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 const (
@@ -14,63 +14,54 @@ const (
 	CheckpointsDir = ".state/checkpoints"
 )
 
-// Default templates conforming to the Cline Memory Bank format and token discipline
+// Default templates conforming to the Cline Memory Bank format and token discipline.
+// These are intentionally project-agnostic: they describe THIS project's structure,
+// never CTXbank itself. Run 'ctx audit --apply' or `ctx prompt-sync` to fill them
+// with real, project-specific content.
 var defaultTemplates = map[string]string{
 	"projectbrief.md": `# Project Brief
 
 ## Overview
-High-level description of the project vision, core deliverables, and primary architectural goals.
+<!-- TODO: one paragraph — what does this project build, and why? -->
 
-## Core Constraints
-- Single static binary footprint (< 15MB) with zero runtime dependencies.
-- Atomic crash-safe writes on all file mutations.
-- Strict token discipline: keep hot context files condensed (< 150 lines).
+## Core Deliverables
+<!-- TODO: bullet list of the main things this project ships -->
+
+## Constraints
+<!-- TODO: technical or product constraints (performance, platforms, compliance) -->
 
 ## Non-Goals
-- Cloud-hosted state storage (local-first design).
-- Unconfirmed automatic file overwrites.
+<!-- TODO: what this project explicitly does NOT do -->
 `,
 
 	"productContext.md": `# Product Context
 
 ## Why This Exists
-Provides a deterministic, crash-safe, local-first memory layer for AI coding agents and developers.
-Replaces brittle prompt-engineering conventions with cryptographic verification, atomic file operations, and MCP delta-sync.
+<!-- TODO: the problem this project solves, in plain language -->
 
 ## Target Audience
-- Developers collaborating with AI coding agents (Cline, Cursor, Claude Code, Antigravity).
-- Engineers needing zero-drift pickup briefs across multi-day context switches.
+<!-- TODO: who uses this, and what do they need? -->
 
 ## User Experience Goals
-- Zero friction: commands work instantaneously without requiring cloud credentials.
-- Zero token waste: returns 20-byte {"unchanged": true} when context has not drifted.
+<!-- TODO: how should using this feel? -->
 `,
 
 	"systemPatterns.md": `# System Patterns
 
 ## Core Architecture
-- **Layer 1: CLI (` + "`cmd/ctx`" + `)**: Static binary for terminal workflows.
-- **Layer 2: Core Storage (` + "`internal/core`" + `)**: Atomic writes, SHA-256 manifest engine.
-- **Layer 3: Git Porcelain (` + "`internal/git`" + `)**: Non-destructive status and diff analysis.
-- **Layer 4: MCP Protocol (` + "`internal/mcp`" + `)**: Stdio-based agent protocol with session delta caching.
+<!-- TODO: layers, modules, and how they relate. Run 'ctx audit --apply' to seed this. -->
 
 ## Critical Design Rules
-- Atomic write pattern: write to ` + "`<file>.tmp.<rand>`" + ` -> ` + "`fsync()`" + ` -> ` + "`rename()`" + `.
-- Never store API keys in plaintext config files (resolve strictly via environment variables).
+<!-- TODO: invariants that must never be broken -->
 `,
 
 	"techContext.md": `# Tech Context
 
 ## Tech Stack
-- **Language:** Go 1.22+
-- **Build Target:** Statically linked binary (` + "`CGO_ENABLED=0`" + `)
-- **Git Integration:** Porcelain CLI queries (` + "`git status --porcelain`" + `, ` + "`git diff`" + `)
-- **Agent Protocol:** Model Context Protocol (MCP) over Stdio
-- **Local LLM Tier:** Ollama HTTP REST API (` + "`localhost:11434`" + `)
+<!-- TODO: languages, frameworks, key dependencies. Run 'ctx audit --apply' to seed this. -->
 
-## Runtime Requirements
-- OS: Windows, Linux, macOS
-- Git: 2.30+ installed in PATH
+## Build & Run
+<!-- TODO: the commands a new developer needs: build, test, lint, run -->
 `,
 
 	"decisionLog.md": `# Decision Log
@@ -79,22 +70,22 @@ All architecture and design decisions are logged here sequentially. This file is
 
 ## [INIT] Initialized CTXbank Memory Bank
 - **Date:** Initial Project Bootstrap
-- **Decision:** Adopt standard Cline memory bank naming schema with deterministic Go engine underneath.
-- **Rationale:** Interoperates with established ecosystem conventions while eliminating amnesia and file corruption.
+- **Decision:** Adopted the standard Cline memory bank file layout for this project.
+- **Rationale:** Human-readable files any AI coding agent already understands.
 `,
 
 	"activeContext.md": `# Active Context — updated initial_bootstrap
 
 ## Focus
-System initialization and baseline scaffolding.
+<!-- TODO: what are you working on right now? One line. -->
 
 ## Recent (last 3 checkpoints)
-- Initialized CTXbank deterministic memory bank layout.
+- Initialized memory bank layout.
 
 ## Next steps
-1. Complete core storage and manifest verification tests.
-2. Build and verify Git porcelain integration and safe checkpointing engine.
-3. Validate CLI commands (` + "`init`" + `, ` + "`status`" + `, ` + "`pause`" + `, ` + "`resume`" + `).
+1. Run 'ctx audit --apply' to seed techContext.md and systemPatterns.md from the codebase.
+2. Or run 'ctx prompt-sync' and hand the generated prompt to your AI agent.
+3. Fill in projectbrief.md and productContext.md with real project intent.
 
 ## Open decisions
 - None currently pending.
@@ -103,18 +94,12 @@ System initialization and baseline scaffolding.
 	"progress.md": `# Progress & Milestone Ledger
 
 ## Status Overview
-- Current Phase: Milestone 1 — Core Foundation & Deterministic CLI
-- Stability: Initial Development
+- Current Phase: <!-- TODO -->
+- Stability: <!-- TODO -->
 
 ## Milestones
-- [ ] M1: Core Foundation & Deterministic CLI
-  - [x] Phase 01: Core Manifest & Atomic Store
-  - [ ] Phase 02: Git Porcelain Integration & Safe Checkpoint Engine
-  - [ ] Phase 03: Primary CLI Surface (init, status, pause, resume)
-- [ ] M2: MCP Server & Multi-Agent Interop
-- [ ] M3: Reconnaissance Audit & CI Budget Linter
-- [ ] M4: Research Ingestion Pipeline & Local LLM Integration
-- [ ] M5: Cross-Project Workspace Dashboard & Hardening
+<!-- TODO: what is done, what is in progress, what is next -->
+- [ ] M1: <!-- first milestone -->
 `,
 }
 

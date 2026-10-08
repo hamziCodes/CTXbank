@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/git"
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/git"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 // GenerateID produces a deterministic, human-readable monotonic checkpoint identifier.
@@ -22,6 +22,21 @@ func CheckpointDir(bankDir string) string {
 	return filepath.Join(bankDir, core.StateDirname, "checkpoints")
 }
 
+// uniqueCheckpointID guards against same-second collisions (e.g. an MCP
+// request_checkpoint racing a manual `ctx pause`): it appends a monotonic
+// suffix until the snapshot path is free. Checkpoints must never silently
+// overwrite each other.
+func uniqueCheckpointID(bankDir, baseID string) string {
+	ckptID := baseID
+	for n := 2; ; n++ {
+		ckptPath := filepath.Join(CheckpointDir(bankDir), fmt.Sprintf("%s.json", ckptID))
+		if _, err := os.Stat(ckptPath); os.IsNotExist(err) {
+			return ckptID
+		}
+		ckptID = fmt.Sprintf("%s-%d", baseID, n)
+	}
+}
+
 // CreateSnapshot captures current git and workspace state and writes it atomically to disk.
 func CreateSnapshot(bankDir, repoDir string, focus string, nextSteps []string, manualEdits []string) (*types.Checkpoint, error) {
 	if err := git.ValidateRepoSafety(repoDir); err != nil {
@@ -29,7 +44,7 @@ func CreateSnapshot(bankDir, repoDir string, focus string, nextSteps []string, m
 	}
 
 	now := time.Now().UTC()
-	ckptID := GenerateID(now)
+	ckptID := uniqueCheckpointID(bankDir, GenerateID(now))
 
 	branch, _ := git.GetCurrentBranch(repoDir)
 	headHash, headMsg, _ := git.GetHeadCommit(repoDir)

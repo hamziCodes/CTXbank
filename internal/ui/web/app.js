@@ -1,5 +1,14 @@
 // CTXbank Interactive Dashboard Application Logic (Smooth UX & Non-Tech Friendly)
 
+// Dashboard auth: the server prints a per-launch token in the URL (?token=...).
+// Every API call goes through apiFetch, which appends it. Without the token
+// the server answers 401, so the UI shell alone is useless to an attacker.
+const CTX_TOKEN = new URLSearchParams(location.search).get('token') || '';
+function apiFetch(path, opts) {
+  const sep = path.includes('?') ? '&' : '?';
+  return fetch(path + sep + 'token=' + encodeURIComponent(CTX_TOKEN), opts);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Navigation State
   const navItems = document.querySelectorAll('.nav-item[data-view]');
@@ -82,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Status Loading
   async function loadStatus() {
     try {
-      const res = await fetch('/api/status');
+      const res = await apiFetch('/api/status');
       const data = await res.json();
 
       // Header Bar
@@ -151,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchCheckpointsCount() {
     try {
-      const res = await fetch('/api/checkpoints');
+      const res = await apiFetch('/api/checkpoints');
       const data = await res.json();
       const count = Array.isArray(data) ? data.length : (data.checkpoints ? data.checkpoints.length : 0);
       const heroStat = document.getElementById('hero-snapshots-count');
@@ -166,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="currentColor">Loading architecture tree...</text>';
 
     try {
-      const res = await fetch('/api/graph');
+      const res = await apiFetch('/api/graph');
       const data = await res.json();
       renderGraph(data.nodes || [], data.edges || []);
       const countEl = document.getElementById('graph-node-count');
@@ -316,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
     grid.innerHTML = '<div class="text-sm text-muted">Loading memory bank files...</div>';
 
     try {
-      const res = await fetch('/api/files');
+      const res = await apiFetch('/api/files');
       const files = await res.json();
       grid.innerHTML = '';
 
@@ -384,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editorModal) editorModal.classList.add('active');
 
     try {
-      const res = await fetch(`/api/file?name=${encodeURIComponent(filename)}`);
+      const res = await apiFetch(`/api/file?name=${encodeURIComponent(filename)}`);
       const data = await res.json();
       if (editorTextarea) editorTextarea.value = data.content || '';
       updateEditorBudget();
@@ -416,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSaveFile.textContent = 'Saving...';
 
       try {
-        const res = await fetch('/api/file/save', {
+        const res = await apiFetch('/api/file/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: activeEditingFile, content: content })
@@ -479,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentRawIngestNote = text;
 
     try {
-      const res = await fetch('/api/ingest/preview', {
+      const res = await apiFetch('/api/ingest/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text, target: 'productContext.md' })
@@ -506,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCommitIngest) {
     btnCommitIngest.addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/ingest/commit', {
+        const res = await apiFetch('/api/ingest/commit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content: currentRawIngestNote, target: 'productContext.md' })
@@ -557,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnModalSave.textContent = 'Saving...';
 
       try {
-        const res = await fetch('/api/checkpoint/create', {
+        const res = await apiFetch('/api/checkpoint/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ focus: focus, notes: notes })
@@ -586,7 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '<div class="text-sm text-muted">Loading snapshots...</div>';
 
     try {
-      const res = await fetch('/api/checkpoints');
+      const res = await apiFetch('/api/checkpoints');
       const data = await res.json();
       const items = Array.isArray(data) ? data : (data.checkpoints || []);
 
@@ -627,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function syncCodebaseContext() {
     showToast('Syncing codebase with Memory Bank...');
     try {
-      const res = await fetch('/api/sync', { method: 'POST' });
+      const res = await apiFetch('/api/sync', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         showToast(`Synced! Detected ${data.packages || 0} packages and ${data.symbols || 0} symbols.`);
@@ -674,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadProjectsModal() {
     if (!discoveredProjectsList) return;
     try {
-      const res = await fetch('/api/projects');
+      const res = await apiFetch('/api/projects');
       const data = await res.json();
 
       const activeProjName = document.getElementById('modal-active-project-name');
@@ -721,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function executeSwitchProject(path) {
     showToast(`Switching workspace to ${path}...`);
     try {
-      const res = await fetch('/api/project/switch', {
+      const res = await apiFetch('/api/project/switch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: path })
@@ -756,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
       folderInspectResult.innerHTML = '<div class="text-xs text-muted">Inspecting directory structure and CTXbank state...</div>';
 
       try {
-        const res = await fetch(`/api/project/inspect?path=${encodeURIComponent(path)}`);
+        const res = await apiFetch(`/api/project/inspect?path=${encodeURIComponent(path)}`);
         const data = await res.json();
 
         if (data.error) {
@@ -801,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Initializing CTXbank and scanning code...');
 
             try {
-              const initRes = await fetch('/api/project/init', {
+              const initRes = await apiFetch('/api/project/init', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ path: data.path })
@@ -838,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRunAudit.addEventListener('click', async () => {
       showToast('Running project audit...');
       try {
-        const res = await fetch('/api/audit');
+        const res = await apiFetch('/api/audit');
         const data = await res.json();
         showToast(`Audit complete: ${data.packages || 0} packages, ${data.symbols || 0} symbols found.`);
       } catch (e) {
@@ -851,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRunLint) {
     btnRunLint.addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/lint');
+        const res = await apiFetch('/api/lint');
         const data = await res.json();
         if (data.compliant) {
           showToast('Memory bank budget check PASSED (all < 150 lines).');
@@ -887,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadPromptSyncStatus() {
     try {
-      const res = await fetch('/api/prompt-sync/status');
+      const res = await apiFetch('/api/prompt-sync/status');
       if (!res.ok) return;
       const data = await res.json();
 
@@ -917,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Creating safety snapshot & generating AI directive prompt...');
 
     try {
-      const res = await fetch('/api/prompt-sync', { method: 'POST' });
+      const res = await apiFetch('/api/prompt-sync', { method: 'POST' });
       const data = await res.json();
 
       if (data.error) {
@@ -954,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Auditing memory bank population against quality standards...');
 
     try {
-      const res = await fetch('/api/prompt-sync/verify', { method: 'POST' });
+      const res = await apiFetch('/api/prompt-sync/verify', { method: 'POST' });
       const data = await res.json();
 
       if (promptSyncVerifyResult) {

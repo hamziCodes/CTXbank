@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/rules"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/rules"
 )
 
 func TestCLIInitAndStatus(t *testing.T) {

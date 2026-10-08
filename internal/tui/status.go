@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 // StatusCardData contains all fields needed to render the status card.

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ctxbank/ctx/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
 )
 
 // ResourceDescriptor defines an MCP resource item.

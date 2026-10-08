@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 // IngestionProposal holds the proposed changes and destination.

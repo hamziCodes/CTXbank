@@ -1,7 +1,10 @@
 package ui
 
 import (
+	"crypto/rand"
+	"crypto/subtle"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -15,19 +18,31 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/audit"
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/git"
-	"github.com/ctxbank/ctx/internal/ingest"
-	"github.com/ctxbank/ctx/internal/linter"
-	syncpkg "github.com/ctxbank/ctx/internal/sync"
-	"github.com/ctxbank/ctx/internal/workspace"
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/internal/audit"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/git"
+	"github.com/hamziCodes/CTXbank/internal/ingest"
+	"github.com/hamziCodes/CTXbank/internal/linter"
+	syncpkg "github.com/hamziCodes/CTXbank/internal/sync"
+	"github.com/hamziCodes/CTXbank/internal/workspace"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 //go:embed web/*
 var embeddedFiles embed.FS
+
+// writableMemoryFiles is the whitelist for /api/file/save: only the 7
+// Cline-compatible memory-bank files may be written through the dashboard.
+var writableMemoryFiles = map[string]bool{
+	"projectbrief.md":  true,
+	"productContext.md": true,
+	"systemPatterns.md": true,
+	"techContext.md":    true,
+	"activeContext.md":  true,
+	"progress.md":       true,
+	"decisionLog.md":    true,
+}
 
 // Server hosts the CTXbank local interactive web dashboard.
 type Server struct {
@@ -35,6 +50,20 @@ type Server struct {
 	RepoDir string
 	BankDir string
 	Port    int
+	// AuthToken is a per-launch random secret required by every /api/*
+	// endpoint (query ?token= or X-CTX-Token header). It prevents other
+	// local processes — and drive-by websites hitting 127.0.0.1 — from
+	// mutating the memory bank through the dashboard.
+	AuthToken string
+}
+
+// generateAuthToken returns a fresh 128-bit random hex token.
+func generateAuthToken() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("fallback-%d", time.Now().UnixNano())
+	}
+	return hex.EncodeToString(b)
 }
 
 // NewServer initializes a dashboard server for the target repository.
@@ -44,9 +73,27 @@ func NewServer(repoDir string, port int) *Server {
 	}
 	bankDir := filepath.Join(repoDir, core.MemoryBankDir)
 	return &Server{
-		RepoDir: repoDir,
-		BankDir: bankDir,
-		Port:    port,
+		RepoDir:   repoDir,
+		BankDir:   bankDir,
+		Port:      port,
+		AuthToken: generateAuthToken(),
+	}
+}
+
+// requireAuth is middleware enforcing the per-launch dashboard token on
+// every /api/* route. Static UI assets stay public; they are useless
+// without API access.
+func (s *Server) requireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			token = r.Header.Get("X-CTX-Token")
+		}
+		if subtle.ConstantTimeCompare([]byte(token), []byte(s.AuthToken)) != 1 {
+			respondError(w, http.StatusUnauthorized, "missing or invalid dashboard token")
+			return
+		}
+		next(w, r)
 	}
 }
 
@@ -67,26 +114,26 @@ func (s *Server) setRepoDir(newRepo string) {
 func (s *Server) Start(openBrowser bool) error {
 	mux := http.NewServeMux()
 
-	// API Routes
-	mux.HandleFunc("/api/status", s.handleStatus)
-	mux.HandleFunc("/api/files", s.handleFiles)
-	mux.HandleFunc("/api/file", s.handleFileGet)
-	mux.HandleFunc("/api/file/save", s.handleFileSave)
-	mux.HandleFunc("/api/graph", s.handleGraph)
-	mux.HandleFunc("/api/checkpoints", s.handleCheckpoints)
-	mux.HandleFunc("/api/checkpoint/create", s.handleCheckpointCreate)
-	mux.HandleFunc("/api/audit", s.handleAudit)
-	mux.HandleFunc("/api/lint", s.handleLint)
-	mux.HandleFunc("/api/ingest/preview", s.handleIngestPreview)
-	mux.HandleFunc("/api/ingest/commit", s.handleIngestCommit)
-	mux.HandleFunc("/api/projects", s.handleProjects)
-	mux.HandleFunc("/api/project/inspect", s.handleProjectInspect)
-	mux.HandleFunc("/api/project/switch", s.handleProjectSwitch)
-	mux.HandleFunc("/api/project/init", s.handleProjectInit)
-	mux.HandleFunc("/api/sync", s.handleSync)
-	mux.HandleFunc("/api/prompt-sync", s.handlePromptSync)
-	mux.HandleFunc("/api/prompt-sync/status", s.handlePromptSyncStatus)
-	mux.HandleFunc("/api/prompt-sync/verify", s.handlePromptSyncVerify)
+	// API Routes — all guarded by the per-launch auth token.
+	mux.HandleFunc("/api/status", s.requireAuth(s.handleStatus))
+	mux.HandleFunc("/api/files", s.requireAuth(s.handleFiles))
+	mux.HandleFunc("/api/file", s.requireAuth(s.handleFileGet))
+	mux.HandleFunc("/api/file/save", s.requireAuth(s.handleFileSave))
+	mux.HandleFunc("/api/graph", s.requireAuth(s.handleGraph))
+	mux.HandleFunc("/api/checkpoints", s.requireAuth(s.handleCheckpoints))
+	mux.HandleFunc("/api/checkpoint/create", s.requireAuth(s.handleCheckpointCreate))
+	mux.HandleFunc("/api/audit", s.requireAuth(s.handleAudit))
+	mux.HandleFunc("/api/lint", s.requireAuth(s.handleLint))
+	mux.HandleFunc("/api/ingest/preview", s.requireAuth(s.handleIngestPreview))
+	mux.HandleFunc("/api/ingest/commit", s.requireAuth(s.handleIngestCommit))
+	mux.HandleFunc("/api/projects", s.requireAuth(s.handleProjects))
+	mux.HandleFunc("/api/project/inspect", s.requireAuth(s.handleProjectInspect))
+	mux.HandleFunc("/api/project/switch", s.requireAuth(s.handleProjectSwitch))
+	mux.HandleFunc("/api/project/init", s.requireAuth(s.handleProjectInit))
+	mux.HandleFunc("/api/sync", s.requireAuth(s.handleSync))
+	mux.HandleFunc("/api/prompt-sync", s.requireAuth(s.handlePromptSync))
+	mux.HandleFunc("/api/prompt-sync/status", s.requireAuth(s.handlePromptSyncStatus))
+	mux.HandleFunc("/api/prompt-sync/verify", s.requireAuth(s.handlePromptSyncVerify))
 
 	// Static Web Assets: Prefer local disk in dev mode for hot reload; fallback to embedded in release
 	var fileSystem http.FileSystem
@@ -112,9 +159,10 @@ func (s *Server) Start(openBrowser bool) error {
 	}
 	s.Port = listener.Addr().(*net.TCPAddr).Port
 
-	url := fmt.Sprintf("http://localhost:%d", s.Port)
+	url := fmt.Sprintf("http://localhost:%d?token=%s", s.Port, s.AuthToken)
 	fmt.Printf("\n[+] CTXbank Interactive Dashboard live at %s\n", url)
-	fmt.Println("    Adheres to VERTEX Universal Design (Solid Objects, Tabular Numbers, 4-State Containers)")
+	fmt.Println("    Dashboard token is required for all API access (embedded in the URL above).")
+	fmt.Println("    Do not share this URL — it grants write access to your memory bank.")
 	fmt.Println("    Press Ctrl+C to stop the dashboard server.")
 
 	if openBrowser {
@@ -263,7 +311,16 @@ func (s *Server) handleFileSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Filename == "activeContext.md" {
+	// Only the 7 known memory-bank files are writable through the dashboard.
+	// The name is sanitized with filepath.Base AND checked against the
+	// whitelist so the manifest can never drift from what was written.
+	cleanName := filepath.Base(req.Filename)
+	if !writableMemoryFiles[cleanName] {
+		respondError(w, http.StatusBadRequest, "only memory-bank files may be saved through the dashboard")
+		return
+	}
+
+	if cleanName == "activeContext.md" {
 		lines := strings.Split(req.Content, "\n")
 		if len(lines) > 150 {
 			respondError(w, http.StatusBadRequest, "activeContext.md strictly exceeds the 150-line budget ceiling")
@@ -272,14 +329,14 @@ func (s *Server) handleFileSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, bankDir := s.getPaths()
-	targetPath := filepath.Join(bankDir, req.Filename)
+	targetPath := filepath.Join(bankDir, cleanName)
 	if err := core.WriteAtomic(targetPath, []byte(req.Content), 0644); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	_ = core.UpdateFileMeta(bankDir, req.Filename, "")
-	respondJSON(w, http.StatusOK, map[string]string{"status": "saved", "filename": req.Filename})
+	_ = core.UpdateFileMeta(bankDir, cleanName, "")
+	respondJSON(w, http.StatusOK, map[string]string{"status": "saved", "filename": cleanName})
 }
 
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {

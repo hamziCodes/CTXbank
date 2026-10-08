@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 var (

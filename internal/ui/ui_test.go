@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 func TestUIServerAPIRoutes(t *testing.T) {
@@ -113,3 +114,98 @@ func TestUIServerAPIRoutes(t *testing.T) {
 	}
 }
 
+
+func TestRequireAuthMiddleware(t *testing.T) {
+	tempWorkspace := t.TempDir()
+	if err := core.InitBank(tempWorkspace, false); err != nil {
+		t.Fatalf("InitBank failed: %v", err)
+	}
+	server := NewServer(tempWorkspace, 0)
+	if server.AuthToken == "" {
+		t.Fatal("expected a generated auth token")
+	}
+	guarded := server.requireAuth(server.handleStatus)
+
+	// No token -> 401
+	req := httptest.NewRequest(http.MethodGet, "/api/status", nil)
+	w := httptest.NewRecorder()
+	guarded(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 without token, got %d", w.Code)
+	}
+
+	// Wrong token -> 401
+	reqBad := httptest.NewRequest(http.MethodGet, "/api/status?token=wrong", nil)
+	wBad := httptest.NewRecorder()
+	guarded(wBad, reqBad)
+	if wBad.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 with wrong token, got %d", wBad.Code)
+	}
+
+	// Correct query token -> 200
+	reqOK := httptest.NewRequest(http.MethodGet, "/api/status?token="+server.AuthToken, nil)
+	wOK := httptest.NewRecorder()
+	guarded(wOK, reqOK)
+	if wOK.Code != http.StatusOK {
+		t.Errorf("expected 200 with query token, got %d", wOK.Code)
+	}
+
+	// Correct header token -> 200
+	reqHdr := httptest.NewRequest(http.MethodGet, "/api/status", nil)
+	reqHdr.Header.Set("X-CTX-Token", server.AuthToken)
+	wHdr := httptest.NewRecorder()
+	guarded(wHdr, reqHdr)
+	if wHdr.Code != http.StatusOK {
+		t.Errorf("expected 200 with header token, got %d", wHdr.Code)
+	}
+}
+
+func TestFileSaveWhitelist(t *testing.T) {
+	tempWorkspace := t.TempDir()
+	if err := core.InitBank(tempWorkspace, false); err != nil {
+		t.Fatalf("InitBank failed: %v", err)
+	}
+	server := NewServer(tempWorkspace, 0)
+
+	postSave := func(filename, content string) *httptest.ResponseRecorder {
+		body := `{"filename":` + quoteJSON(filename) + `,"content":` + quoteJSON(content) + `}`
+		req := httptest.NewRequest(http.MethodPost, "/api/file/save?token="+server.AuthToken, strings.NewReader(body))
+		w := httptest.NewRecorder()
+		server.requireAuth(server.handleFileSave)(w, req)
+		return w
+	}
+
+	// Arbitrary filename rejected
+	if w := postSave("evil.json", "x"); w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for evil.json, got %d", w.Code)
+	}
+	// Path traversal rejected (Base -> "passwd", not whitelisted)
+	if w := postSave("../../etc/passwd", "x"); w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for traversal, got %d", w.Code)
+	}
+	// Over-budget activeContext rejected
+	big := strings.Repeat("line\n", 151)
+	if w := postSave("activeContext.md", big); w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for 151-line activeContext, got %d", w.Code)
+	}
+	// Valid save works and updates the manifest under the sanitized name
+	if w := postSave("progress.md", "# Progress\n- done\n"); w.Code != http.StatusOK {
+		t.Errorf("expected 200 for progress.md, got %d (%s)", w.Code, w.Body.String())
+	}
+	bankDir := filepath.Join(tempWorkspace, core.MemoryBankDir)
+	manifest, err := core.LoadManifest(bankDir)
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if _, ok := manifest.Files["progress.md"]; !ok {
+		t.Errorf("manifest missing progress.md after save: %+v", manifest.Files)
+	}
+	if _, ok := manifest.Files["./progress.md"]; ok {
+		t.Errorf("manifest recorded unsanitized filename")
+	}
+}
+
+func quoteJSON(s string) string {
+	b, _ := json.Marshal(s)
+	return string(b)
+}

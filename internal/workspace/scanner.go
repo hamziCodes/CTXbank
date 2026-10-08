@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/git"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/git"
 )
 
 // ProjectSummary represents status metrics for an initialized CTXbank workspace.
@@ -57,6 +57,13 @@ func ScanWorkspaces(rootPath string, maxDepth int) ([]ProjectSummary, error) {
 	})
 
 	return projects, nil
+}
+
+// InspectProject returns a live status summary for a single workspace path.
+// It is the exported form of inspectProject, used by `ctx list` for
+// registry entries.
+func InspectProject(repoPath string) ProjectSummary {
+	return inspectProject(repoPath)
 }
 
 func inspectProject(repoPath string) ProjectSummary {

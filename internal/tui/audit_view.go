@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ctxbank/ctx/internal/audit"
+	"github.com/hamziCodes/CTXbank/internal/audit"
 )
 
 // RenderAuditReport formats the full reconnaissance audit report for terminal output.

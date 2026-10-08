@@ -90,14 +90,17 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 
 | Command | What it does |
 |---|---|
-| `ctx ui` (or `ctx dashboard`) | Launches the embedded VERTEX web dashboard with interactive architecture graphs. |
+| `ctx ui` (or `ctx dashboard`) | Launches the embedded web dashboard with interactive architecture graphs. A per-launch token is printed in the terminal and embedded in the URL — all API calls require it. |
 | `ctx status` | Shows a clean terminal card with your git branch, dirty files, and current focus. |
-| `ctx pause` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
+| `ctx pause [--note "…"] [--focus "…"]` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
 | `ctx resume` | Prints an instant summary of what you were working on so you can pick up immediately. |
 | `ctx audit` | Scans your project structure, code symbols, and git history without changing code. |
 | `ctx ingest <file.md>` | Ingests raw brainstorm notes, removes duplicate text automatically, and proposes updates. |
-| `ctx list` | Shows a dashboard of all your active CTXbank projects across your computer. |
+| `ctx list [dir]` | Shows your recent CTXbank projects (or scans a directory for workspaces). |
 | `ctx lint-memory` | Checks that your memory bank files aren't bloated (keeps activeContext under 150 lines). |
+| `ctx prompt-sync` | Generates an AI directive prompt so your agent can populate the memory bank, then verifies the result. |
+| `ctx doctor` | Self-check: binary, git, memory-bank health, manifest drift — plus the MCP snippet for your editor. |
+| `ctx completion <shell>` | Prints shell completions (bash, zsh, fish, powershell). |
 | `ctx serve --mcp` | Starts the background server so AI tools can talk to CTXbank directly. |
 
 ---
@@ -118,9 +121,10 @@ This instantly boots an embedded local web dashboard (served directly from the s
 - **Checkpoint Manager:** 1-click snapshot creation, rollback preview, and branch audit timeline.
 
 ### 2. Native VS Code & Cursor Extension
-Install the official extension directly in VS Code or Cursor:
+Install the official extension directly in VS Code or Cursor — download the `.vsix` first (`code --install-extension` does not accept URLs):
 ```bash
-code --install-extension https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
+curl -fsSL -o ctxbank.vsix https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
+code --install-extension ctxbank.vsix
 ```
 *(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`).*
 

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/audit"
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/git"
-	"github.com/ctxbank/ctx/internal/linter"
+	"github.com/hamziCodes/CTXbank/internal/audit"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/git"
+	"github.com/hamziCodes/CTXbank/internal/linter"
 )
 
 const (
@@ -193,12 +193,16 @@ func VerifySyncCompletion(bankDir string) (*VerificationResult, error) {
 			issues = append(issues, fmt.Sprintf("%s exceeds the 150-line token budget (%d lines)", f, lineCount))
 		}
 
-		// Check for unreplaced generic template phrases
+		// Check for unreplaced generic template phrases / placeholders.
+		// `ctx init` scaffolds neutral TODO placeholders; a bank that still
+		// contains them has not been populated yet and must not verify.
 		genericPhrases := []string{
 			"High-level description of the project vision",
 			"Replaces brittle prompt-engineering conventions",
 			"Generic framework template",
 			"Replace this with your project details",
+			"<!-- TODO",
+			"TODO:",
 		}
 		for _, phrase := range genericPhrases {
 			if strings.Contains(content, phrase) {

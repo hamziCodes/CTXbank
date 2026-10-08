@@ -10,22 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ctxbank/ctx/internal/audit"
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
-	"github.com/ctxbank/ctx/internal/git"
-	"github.com/ctxbank/ctx/internal/ingest"
-	"github.com/ctxbank/ctx/internal/linter"
-	"github.com/ctxbank/ctx/internal/llm"
-	"github.com/ctxbank/ctx/internal/mcp"
-	"github.com/ctxbank/ctx/internal/rules"
-	syncpkg "github.com/ctxbank/ctx/internal/sync"
-	"github.com/ctxbank/ctx/internal/tui"
-	"github.com/ctxbank/ctx/internal/ui"
-	"github.com/ctxbank/ctx/internal/workspace"
+	"github.com/hamziCodes/CTXbank/internal/audit"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/git"
+	"github.com/hamziCodes/CTXbank/internal/ingest"
+	"github.com/hamziCodes/CTXbank/internal/linter"
+	"github.com/hamziCodes/CTXbank/internal/llm"
+	"github.com/hamziCodes/CTXbank/internal/mcp"
+	"github.com/hamziCodes/CTXbank/internal/rules"
+	syncpkg "github.com/hamziCodes/CTXbank/internal/sync"
+	"github.com/hamziCodes/CTXbank/internal/tui"
+	"github.com/hamziCodes/CTXbank/internal/ui"
+	"github.com/hamziCodes/CTXbank/internal/workspace"
 )
 
-const Version = "0.1.0"
+// Version is the binary version string. Release builds override it via:
+//   go build -ldflags "-X main.Version=<tag>" ./cmd/ctx
+var Version = "0.1.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -57,6 +59,10 @@ func main() {
 		runPromptSync(os.Args[2:])
 	case "serve":
 		runServe(os.Args[2:])
+	case "doctor":
+		runDoctor(os.Args[2:])
+	case "completion":
+		runCompletion(os.Args[2:])
 	case "--version", "-v", "version":
 		fmt.Printf("ctx version %s\n", Version)
 	case "--help", "-h", "help":
@@ -78,14 +84,18 @@ Commands:
   init            Initialize memory-bank/ layout and minimal vendor rules
   status [--json] Display single-shot project health and active context
   ui [--port N]   Launch interactive VERTEX web dashboard in your browser
-  list [dir]      List and inspect all CTXbank workspaces under directory
-  pause           Safe checkpoint + capture manual out-of-band changes
+  list [dir]      List CTXbank workspaces (recent projects, or scan dir)
+  pause [--note "…"] [--focus "…"]
+                Safe checkpoint + capture manual out-of-band changes
   resume          Display instant pickup brief for human or agent
   prompt-sync     Auto-checkpoint + generate tailored AI Directive Prompt
   audit [--apply] Run 4-stage brownfield reconnaissance scan
   ingest <path>   Ingest research notes into memory-bank with diff review
   lint-memory     Enforce line budgets (< 150 lines) and memory integrity
   serve --mcp     Run the Model Context Protocol (MCP) server over stdio
+  doctor          Self-check: binary, git, memory-bank, manifest drift
+  completion <shell>
+                Print shell completions (bash, zsh, fish, powershell)
 
 Flags:
   --help, -h      Show this help message
@@ -115,6 +125,10 @@ func runInit(args []string) {
 		fmt.Fprintf(os.Stderr, "Warning: failed to generate some vendor stubs: %v\n", err)
 	} else if len(stubs) > 0 {
 		fmt.Printf("Generated minimal vendor stubs: %s\n", strings.Join(stubs, ", "))
+	}
+
+	if err := workspace.RecordProject(cwd); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not record project in registry: %v\n", err)
 	}
 
 	fmt.Println("Initialization complete: memory-bank/ scaffolded with crash-safe atomic engine.")
@@ -211,7 +225,23 @@ func runStatus(args []string) {
 	fmt.Println(tui.RenderStatusCard(cardData))
 }
 
+// isTerminalStdin reports whether stdin is an interactive terminal.
+// When ctx is scripted (stdin piped/redirected), interactive prompts are
+// skipped instead of blocking forever on a read that will never come.
+func isTerminalStdin() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
+}
+
 func runPause(args []string) {
+	fs := flag.NewFlagSet("pause", flag.ExitOnError)
+	noteFlag := fs.String("note", "", "One-line note about what changed (skips the interactive prompt)")
+	focusFlag := fs.String("focus", "", "Active focus label for this checkpoint")
+	_ = fs.Parse(args)
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -224,11 +254,20 @@ func runPause(args []string) {
 		os.Exit(1)
 	}
 
-	// Prompt for manual change description
+	focus := "Manual Pause Checkpoint"
+	if *focusFlag != "" {
+		focus = *focusFlag
+	}
+
+	// Prompt for manual change description (skipped when --note is given
+	// or when stdin is not a terminal, e.g. in scripts/CI).
 	fmt.Print("Snapshotting... detecting changes...\n")
 	dirty, _ := git.GetStatus(cwd)
 	var manualNotes []string
-	if len(dirty) > 0 {
+	switch {
+	case *noteFlag != "":
+		manualNotes = append(manualNotes, *noteFlag)
+	case len(dirty) > 0 && isTerminalStdin():
 		fmt.Printf("Detected %d modified file(s).\n", len(dirty))
 		fmt.Print("  -> What did you change here? (one line, Enter to skip): ")
 		reader := bufio.NewReader(os.Stdin)
@@ -237,9 +276,11 @@ func runPause(args []string) {
 		if note != "" {
 			manualNotes = append(manualNotes, note)
 		}
+	case len(dirty) > 0:
+		fmt.Printf("Detected %d modified file(s); stdin is not a terminal, skipping note prompt (use --note to add one).\n", len(dirty))
 	}
 
-	ckpt, err := checkpoint.CreateSnapshot(bankDir, cwd, "Manual Pause Checkpoint", nil, manualNotes)
+	ckpt, err := checkpoint.CreateSnapshot(bankDir, cwd, focus, nil, manualNotes)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Checkpoint failed: %v\n", err)
 		os.Exit(1)
@@ -449,7 +490,7 @@ func runList(args []string) {
 
 	// Position-independent --json check
 	isJSON := *jsonOutput
-	targetDir := "."
+	targetDir := ""
 	for _, arg := range args {
 		if arg == "--json" {
 			isJSON = true
@@ -464,15 +505,30 @@ func runList(args []string) {
 		os.Exit(1)
 	}
 
-	searchRoot := targetDir
-	if !filepath.IsAbs(searchRoot) {
-		searchRoot = filepath.Join(cwd, targetDir)
+	var projects []workspace.ProjectSummary
+	if targetDir == "" {
+		// No directory given: prefer the recent-projects registry
+		// (~/.ctxbank/projects.json); fall back to scanning cwd.
+		if recent, err := workspace.RecentProjects(); err == nil && len(recent) > 0 {
+			for _, r := range recent {
+				projects = append(projects, workspace.InspectProject(r.Path))
+			}
+		}
 	}
-
-	projects, err := workspace.ScanWorkspaces(searchRoot, *depthFlag)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error scanning workspaces: %v\n", err)
-		os.Exit(1)
+	if targetDir != "" || len(projects) == 0 {
+		searchRoot := targetDir
+		if searchRoot == "" {
+			searchRoot = "."
+		}
+		if !filepath.IsAbs(searchRoot) {
+			searchRoot = filepath.Join(cwd, targetDir)
+		}
+		var err error
+		projects, err = workspace.ScanWorkspaces(searchRoot, *depthFlag)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error scanning workspaces: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	if isJSON {
@@ -484,7 +540,11 @@ func runList(args []string) {
 
 	box := tui.GetBox()
 	if len(projects) == 0 {
-		fmt.Printf("No active CTXbank projects found under %s\n", targetDir)
+		where := targetDir
+		if where == "" {
+			where = "recent projects or current directory"
+		}
+		fmt.Printf("No active CTXbank projects found under %s\n", where)
 		return
 	}
 
@@ -521,6 +581,10 @@ func runUI(args []string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
+	}
+
+	if err := workspace.RecordProject(cwd); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not record project in registry: %v\n", err)
 	}
 
 	server := ui.NewServer(cwd, *portFlag)
