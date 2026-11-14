@@ -309,3 +309,13 @@ code {
   .flow-dot { width: 44px; height: 44px; }
   .flow-line { left: 21px; }
 }
+
+/* Documentation link cards + footer links */
+.doc-card { display: block; text-decoration: none; color: inherit; transition: transform 0.25s var(--ease-calm), box-shadow 0.25s var(--ease-calm); }
+.doc-card:hover { transform: translateY(-3px); box-shadow: var(--sh-shadow); }
+.doc-card .doc-link { display: inline-block; margin-top: 10px; font-weight: 600; color: var(--sh-accent-text); }
+.docs-note { margin-top: 20px; }
+.docs-note a, .band a { color: var(--sh-accent-text); font-weight: 600; }
+.footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+.footer-links a { color: var(--sh-ink-soft); text-decoration: none; font-weight: 500; }
+.footer-links a:hover { color: var(--sh-accent-text); }
