@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 var sessionMu sync.Mutex

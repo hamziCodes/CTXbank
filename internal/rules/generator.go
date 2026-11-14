@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 const CanonicalDirective = `# AGENT INSTRUCTION: MANDATORY MEMORY BANK SYNC

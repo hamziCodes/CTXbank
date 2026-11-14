@@ -50,14 +50,12 @@ tar -xzf "$TEMP_DIR/$ASSET" -C "$TEMP_DIR"
 # Check write permissions for /usr/local/bin
 if [ -w "$INSTALL_DIR" ]; then
   cp "$TEMP_DIR/ctx" "$INSTALL_DIR/ctx"
-  cp "$TEMP_DIR/ctx-mcp" "$INSTALL_DIR/ctx-mcp"
-  chmod +x "$INSTALL_DIR/ctx" "$INSTALL_DIR/ctx-mcp"
+  chmod +x "$INSTALL_DIR/ctx"
 else
   USER_BIN="$HOME/.ctxbank/bin"
   mkdir -p "$USER_BIN"
   cp "$TEMP_DIR/ctx" "$USER_BIN/ctx"
-  cp "$TEMP_DIR/ctx-mcp" "$USER_BIN/ctx-mcp"
-  chmod +x "$USER_BIN/ctx" "$USER_BIN/ctx-mcp"
+  chmod +x "$USER_BIN/ctx"
   INSTALL_DIR="$USER_BIN"
 
   # Add to PATH in rc files

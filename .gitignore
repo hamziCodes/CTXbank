@@ -34,3 +34,7 @@ tmp/
 node_modules/
 *.vsix
 
+
+# CTXbank runtime state (checkpoints, manifest, tokens — never commit)
+memory-bank/.state/
+dist/

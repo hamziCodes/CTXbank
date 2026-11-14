@@ -380,7 +380,13 @@ async function updateStatusBar(workspaceRoot: string, item: vscode.StatusBarItem
 function runCtxCommand(args: string[], focus: string, notes: string) {
   const terminal = vscode.window.createTerminal('CTXbank');
   terminal.show();
-  terminal.sendText(`ctx pause`);
+  // Pass the collected focus/notes as flags so `ctx pause` does not
+  // re-prompt interactively. Shell-escape double quotes in user input.
+  const esc = (s: string) => s.replace(/"/g, '\\"');
+  let cmd = 'ctx pause';
+  if (focus) cmd += ` --focus "${esc(focus)}"`;
+  if (notes) cmd += ` --note "${esc(notes)}"`;
+  terminal.sendText(cmd);
 }
 
 export function deactivate() {}

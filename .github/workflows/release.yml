@@ -56,8 +56,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           mkdir -p dist
-          go build -ldflags="-s -w" -o dist/ctx ./cmd/ctx
-          go build -ldflags="-s -w" -o dist/ctx-mcp ./cmd/ctx-mcp
+          go build -ldflags="-s -w -X main.Version=${{ github.ref_name }}" -o dist/ctx ./cmd/ctx
           cp README.md LICENSE dist/
           tar -czvf "ctx-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz" -C dist .
 
@@ -70,8 +69,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          go build -ldflags="-s -w" -o dist/ctx.exe ./cmd/ctx
-          go build -ldflags="-s -w" -o dist/ctx-mcp.exe ./cmd/ctx-mcp
+          go build -ldflags="-s -w -X main.Version=${{ github.ref_name }}" -o dist/ctx.exe ./cmd/ctx
           Copy-Item README.md -Destination dist/
           Copy-Item LICENSE -Destination dist/
           Compress-Archive -Path dist/* -DestinationPath "ctx-${{ matrix.target.os }}-${{ matrix.target.arch }}.zip" -Force

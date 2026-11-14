@@ -1,6 +1,8 @@
 # CTXbank
 
-> **A simple, bulletproof memory bank for AI coding assistants and developers.**  
+> **A simple, bulletproof memory bank for AI coding assistants and developers.**
+>
+> Current release: **v0.2.0** — see [CHANGELOG.md](CHANGELOG.md) for what changed.
 > Never lose your project context, never let your AI hallucinate rules, and never waste tokens re-reading files that haven't changed.
 
 ---
@@ -34,7 +36,7 @@ Whenever you finish a task, want to switch git branches, or log off for the nigh
 ```bash
 ctx pause
 ```
-CTXbank takes a snapshot of your git state, records your recent changes, and creates a restore point. When you return, just run:
+CTXbank takes a snapshot of your git state, records your recent changes, creates a restore point, and writes your note and focus straight into `activeContext.md`. When you return, just run:
 ```bash
 ctx resume
 ```
@@ -90,39 +92,48 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 
 | Command | What it does |
 |---|---|
-| `ctx ui` (or `ctx dashboard`) | Launches the embedded VERTEX web dashboard with interactive architecture graphs. |
+| `ctx ui` (or `ctx dashboard`) | Launches this project's local web dashboard. Your project token is embedded in the URL — all API calls require it. |
 | `ctx status` | Shows a clean terminal card with your git branch, dirty files, and current focus. |
-| `ctx pause` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
+| `ctx pause [--note "…"] [--focus "…"]` | Saves a snapshot and writes the note + focus into `activeContext.md`, so resume picks up exactly there. |
 | `ctx resume` | Prints an instant summary of what you were working on so you can pick up immediately. |
 | `ctx audit` | Scans your project structure, code symbols, and git history without changing code. |
-| `ctx ingest <file.md>` | Ingests raw brainstorm notes, removes duplicate text automatically, and proposes updates. |
-| `ctx list` | Shows a dashboard of all your active CTXbank projects across your computer. |
+| `ctx ingest <file.md> [--yes]` | Files a note where it belongs (decisions → `decisionLog.md`, tech → `techContext.md`, …), removes duplicates, and proposes the diff first. Your original file is never moved — a copy is archived. Non-interactive runs must pass `--yes`. |
+| `ctx list [dir]` | Shows your recent CTXbank projects (or scans a directory for workspaces). |
 | `ctx lint-memory` | Checks that your memory bank files aren't bloated (keeps activeContext under 150 lines). |
+| `ctx prompt-sync` | Generates an AI directive prompt so your agent can populate the memory bank, then verifies the result. |
+| `ctx doctor` | Self-check: binary, git, memory-bank health, manifest drift — plus the MCP snippet for your editor. |
+| `ctx completion <shell>` | Prints shell completions (bash, zsh, fish, powershell). |
+| `ctx token [--regenerate]` | Shows this project's dashboard token (paste it on the Connect page). |
 | `ctx serve --mcp` | Starts the background server so AI tools can talk to CTXbank directly. |
 
 ---
 
 ## Interactive Visual Interfaces
 
-CTXbank offers two rich, zero-learning-curve visual interfaces built to the high-precision **VERTEX Universal Design System**:
+CTXbank offers two rich, zero-learning-curve visual interfaces:
 
-### 1. Embedded Web Dashboard (`ctx ui`)
-Run a single command in your terminal:
+### 1. Local Web Dashboard (`ctx ui`)
+One dashboard per project, running entirely on your machine. Run a single command in your terminal:
 ```bash
 ctx ui
 ```
-This instantly boots an embedded local web dashboard (served directly from the static binary on `http://localhost:4242`) with:
+This instantly boots a local web dashboard (served directly from the static binary on `http://localhost:4242`) with:
 - **Interactive SVG Architecture Graph:** Clickable nodes representing core components, test suites, and memory files with live line counts and status rings.
 - **Visual Memory Cards:** Live preview and tabbed editor for all 7 memory bank files with real-time budget meter warning before hitting line limits.
 - **Drag-and-Drop Ingestion:** Drop meeting notes, markdown brainstorms, or research documents into the browser to auto-deduplicate (SimHash) and merge into memory files.
 - **Checkpoint Manager:** 1-click snapshot creation, rollback preview, and branch audit timeline.
 
+**Project tokens:** every project gets its own dashboard token — a private key printed by `ctx init` and retrievable anytime with `ctx token`. The dashboard requires it on every request, so nothing else on your machine (or a stray browser tab) can touch your memory bank. Paste the token on the [Connect page](https://ctxbank.vertexdevstudio.tech/#connect) to open your local dashboard from the website. Lost it? `ctx token --regenerate` makes a new one.
+
+**Dashboard extras:** a built-in **Guide** tab explains every view and command in plain English; if you open the dashboard URL without its `?token=…`, it asks for the token instead of showing a dead page. The footer shows your project path and `ctx` version — the Connect page uses that version to tell you when your `ctx` is too old to connect (update with `go install github.com/hamziCodes/CTXbank/cmd/ctx@latest`).
+
 ### 2. Native VS Code & Cursor Extension
-Install the official extension directly in VS Code or Cursor:
+Install the official extension directly in VS Code or Cursor — download the `.vsix` first (`code --install-extension` does not accept URLs):
 ```bash
-code --install-extension https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
+curl -fsSL -o ctxbank.vsix https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
+code --install-extension ctxbank.vsix
 ```
-*(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`).*
+*(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`). The extension is unchanged in v0.2.0 — it works with any `ctx` version.*
 
 **Features inside your IDE:**
 - **Activity Bar Sidebar:** Dedicated CTXbank icon with 3 collapsible views:

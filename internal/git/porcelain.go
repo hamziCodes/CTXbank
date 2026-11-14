@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 // Runner abstracts git command execution for testing.

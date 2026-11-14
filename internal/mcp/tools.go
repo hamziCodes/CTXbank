@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ctxbank/ctx/internal/checkpoint"
-	"github.com/ctxbank/ctx/internal/core"
+	"github.com/hamziCodes/CTXbank/internal/checkpoint"
+	"github.com/hamziCodes/CTXbank/internal/core"
 )
 
 var (
@@ -137,14 +137,34 @@ func ToolAppendMemoryDelta(bankDir, sessionID, filename, section, content string
 			ErrLineBudgetExceeded, existingLines, deltaLines)
 	}
 
-	// Append under named section
-	header := fmt.Sprintf("## %s", section)
+	// Append under the named section. An empty section means "append at
+	// the end of the file": building a header of "## " and searching for
+	// it would match the prefix of the file's first real heading and
+	// corrupt it (the content landed between "## " and "Focus").
 	var updated string
-	if strings.Contains(existingStr, header) {
-		idx := strings.Index(existingStr, header) + len(header)
-		updated = existingStr[:idx] + "\n" + content + existingStr[idx:]
+	if section == "" {
+		updated = strings.TrimRight(existingStr, "\r\n") + "\n" + content
+		if !strings.HasSuffix(updated, "\n") {
+			updated += "\n"
+		}
 	} else {
-		updated = strings.TrimRight(existingStr, "\r\n") + "\n\n" + header + "\n" + content + "\n"
+		header := fmt.Sprintf("## %s", section)
+		lines := strings.Split(existingStr, "\n")
+		found := -1
+		for i, l := range lines {
+			if strings.TrimRight(l, "\r") == header {
+				found = i
+				break
+			}
+		}
+		if found >= 0 {
+			out := append([]string{}, lines[:found+1]...)
+			out = append(out, content)
+			out = append(out, lines[found+1:]...)
+			updated = strings.Join(out, "\n")
+		} else {
+			updated = strings.TrimRight(existingStr, "\r\n") + "\n\n" + header + "\n" + content + "\n"
+		}
 	}
 
 	if err := core.WriteAtomic(targetPath, []byte(updated), 0644); err != nil {

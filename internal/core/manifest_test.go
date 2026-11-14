@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ctxbank/ctx/pkg/types"
+	"github.com/hamziCodes/CTXbank/pkg/types"
 )
 
 func TestStripFrontmatter(t *testing.T) {
