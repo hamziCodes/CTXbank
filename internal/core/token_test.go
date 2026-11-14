@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -31,13 +32,18 @@ func TestProjectTokenCreateGetRegenerate(t *testing.T) {
 		t.Errorf("token not persisted: %q != %q", tok1, tok2)
 	}
 
-	// File must not be world-readable.
+	// File must not be world-readable. Windows has no Unix permission
+	// bits (Go reports 0666 for a writable file regardless of the 0600
+	// request); there the token relies on the user profile's ACLs, so the
+	// exact-bits assertion is Unix-only.
 	fi, err := os.Stat(filepath.Join(bankDir, StateDirname, ProjectTokenFilename))
 	if err != nil {
 		t.Fatalf("token file missing: %v", err)
 	}
-	if perm := fi.Mode().Perm(); perm != 0600 {
-		t.Errorf("expected 0600 token file, got %o", perm)
+	if runtime.GOOS != "windows" {
+		if perm := fi.Mode().Perm(); perm != 0600 {
+			t.Errorf("expected 0600 token file, got %o", perm)
+		}
 	}
 
 	// Regenerate rotates.
