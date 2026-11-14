@@ -319,3 +319,41 @@ code {
 .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
 .footer-links a { color: var(--sh-ink-soft); text-decoration: none; font-weight: 500; }
 .footer-links a:hover { color: var(--sh-accent-text); }
+
+/* Logo lockup */
+.logo-mark { border-radius: 8px; flex: none; }
+.logo-mark-sm { border-radius: 6px; }
+.wordmark { display: inline-flex; align-items: center; gap: 9px; }
+.footer-brand { display: inline-flex; align-items: center; gap: 7px; }
+
+/* Hero: copy + the dark-act demo card */
+@media (min-width: 1024px) {
+  .hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+}
+.demo-card {
+  margin: 36px 0 0;
+  background: #16120b;
+  color: #fff6e5;
+  border: 1px solid #453723;
+  border-radius: 24px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 24px 60px -24px rgba(80, 52, 12, 0.35);
+  transform: rotate(0.6deg);
+}
+@media (min-width: 1024px) { .demo-card { margin-top: 0; } }
+.demo-head { display: flex; align-items: center; gap: 9px; padding-bottom: 14px; border-bottom: 1px solid #453723; }
+.demo-title { font-size: 12.5px; color: #d8c9a8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.demo-live { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #5fb08c; white-space: nowrap; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #5fb08c; animation: dot-pulse 2.2s ease-in-out infinite; }
+@keyframes dot-pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.35); opacity: 1; } }
+.demo-file { background: #221b10; border: 1px solid #453723; border-radius: 12px; padding: 13px 15px; margin-top: 14px; }
+.demo-file-name { font-size: 12px; color: #e8a04c; margin-bottom: 6px; }
+.demo-file p { margin: 3px 0; font-size: 13.5px; line-height: 1.5; color: #fff6e5; }
+.demo-label { color: #a08c64; font-weight: 600; }
+.demo-row { display: flex; align-items: center; gap: 11px; margin-top: 13px; font-size: 13px; color: #d8c9a8; }
+.demo-chip { flex: none; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.demo-chip-pause { background: rgba(232, 160, 76, 0.16); color: #e8a04c; }
+.demo-chip-mcp { background: rgba(95, 176, 140, 0.14); color: #5fb08c; font-weight: 400; }
+.demo-caption { margin-top: 15px; font-size: 12.5px; color: #a08c64; }
+.thread-divider { display: block; width: 100%; height: 24px; margin-top: 44px; }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } .demo-card { transform: none; } }
