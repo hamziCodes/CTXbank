@@ -7,7 +7,7 @@ backend, no tracking.
 ## What's here
 
 - `index.html` — one page, three tabs (`#how`, `#setup`, `#connect`)
-- `styles.css` — Soft Harbor design tokens (light default, dark toggle)
+- `styles.css` — Wavia Marigold Market design tokens (light default, dark-act toggle)
 - `app.js` — tabs, copy buttons, theme, Connect-page localhost probe
 
 ## The Connect model
@@ -33,7 +33,7 @@ cd website && python3 -m http.server 8080
 
 ## Design
 
-Built to the VERTEX Soft Harbor design language
+Built to the Wavia Marigold Market design language (Theme B — the Wavia engine brand layer)
 (`~/workspace/design-language/DESIGN_LANGUAGE.md`): flat colour, calm motion,
 sentence case, one idea per section. Light is the default; dark is an opt-in
 toggle persisted in `localStorage`.

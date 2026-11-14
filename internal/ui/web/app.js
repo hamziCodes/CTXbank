@@ -257,11 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const isDark = document.documentElement.classList.contains('dark');
-    const edgeColor = isDark ? '#33445b' : '#cbd5e1';
-    const textColor = isDark ? '#f8fafc' : '#0f172a';
-    const subTextColor = isDark ? '#94a3b8' : '#64748b';
-    const rectFill = isDark ? '#111720' : '#ffffff';
-    const rectStroke = isDark ? '#222e3e' : '#e2e8f0';
+    const edgeColor = isDark ? '#453723' : '#e8d8ba';
+    const textColor = isDark ? '#fff6e5' : '#1c1408';
+    const subTextColor = isDark ? '#a08c64' : '#6b5b45';
+    const rectFill = isDark ? '#221b10' : '#fffbf2';
+    const rectStroke = isDark ? '#453723' : '#e8d8ba';
 
     // Render Edges
     edges.forEach(edge => {
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       rect.setAttribute('rx', '10');
       rect.setAttribute('ry', '10');
       rect.setAttribute('fill', rectFill);
-      rect.setAttribute('stroke', nodeId === 'activeContext' ? (isDark ? '#609abe' : '#042940') : rectStroke);
+      rect.setAttribute('stroke', nodeId === 'activeContext' ? (isDark ? '#e8a04c' : '#b45309') : rectStroke);
       rect.setAttribute('stroke-width', nodeId === 'activeContext' ? '2' : '1.5');
       group.appendChild(rect);
 
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
       text.setAttribute('fill', textColor);
       text.setAttribute('font-size', '12');
       text.setAttribute('font-weight', '600');
-      text.setAttribute('font-family', 'Inter, sans-serif');
+      text.setAttribute('font-family', 'Instrument Sans, sans-serif');
       text.textContent = nodeName;
       group.appendChild(text);
 

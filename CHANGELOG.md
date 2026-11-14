@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.1 — 2026-11-14
+
+### Changed
+- **All frontends restyled to the Wavia "Marigold Market" theme** (Theme B,
+  the Wavia engine brand layer): warm paper `#fff6e5`, burnt marigold
+  `#b45309`, ink `#1c1408`, palm-green verified states, brass accents;
+  Bricolage Grotesque display, Instrument Sans body, Space Mono mono.
+  Applies to the local dashboard (light + dark act `#16120b`), the Connect
+  website, and the VS Code extension webview. Retires the old VERTEX
+  Soft Harbor palette everywhere.
+
 ## v0.2.0 — 2026-11-14
 
 The "loop actually closes" release. v0.2.0 is the first version where the

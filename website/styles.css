@@ -1,46 +1,49 @@
-/* VERTEX/ctxbank — Soft Harbor design language.
-   Flat colour, calm motion, light by default, dark as an equal citizen. */
+/* CTXbank — Wavia Marigold Market design language.
+   Flat colour, calm motion, light warm paper by default, one dark act. */
 
 :root {
-  --sh-canvas: #F4F6F7;
-  --sh-surface: #FFFFFF;
-  --sh-sunken: #E9EFF2;
-  --sh-warm: #F1ECE4;
-  --sh-ink: #1E2A33;
-  --sh-ink-soft: #5B6F7B;
-  --sh-accent-fill: #5B7A8C;
-  --sh-accent-hover: #486575;
-  --sh-accent-text: #3E5C6B;
-  --sh-accent-soft: rgba(91, 122, 140, 0.10);
-  --sh-hairline: #D8DFE4;
-  --sh-boundary: #768893;
-  --sh-success: #3E7C5B;
-  --sh-alert: #B4543F;
-  --sh-shadow: 0 1px 2px rgb(30 42 51 / 0.06), 0 8px 24px rgb(30 42 51 / 0.06);
-  --sh-radius: 12px;
-  --sh-radius-sm: 8px;
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Inter", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Wavia "Marigold Market" (Theme B) — same brand layer as the dashboard:
+     warm paper, burnt marigold, ink text. Source: WAVIA_WEBSITE/src/theme.css */
+  --sh-canvas: #fff6e5;
+  --sh-surface: #fffbf2;
+  --sh-sunken: #f6e6c8;
+  --sh-warm: #fbeacd;
+  --sh-ink: #1c1408;
+  --sh-ink-soft: #6b5b45;
+  --sh-accent-fill: #b45309;
+  --sh-accent-hover: #93430a;
+  --sh-accent-text: #93430a;
+  --sh-accent-soft: rgba(180, 83, 9, 0.10);
+  --sh-hairline: #e8d8ba;
+  --sh-boundary: #1c1408;
+  --sh-success: #1e6b4f;
+  --sh-alert: #b3261e;
+  --sh-shadow: 0 24px 60px -24px rgba(80, 52, 12, 0.35);
+  --sh-radius: 24px;
+  --sh-radius-sm: 12px;
+  --font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
   --ease-calm: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* Dark act — Wavia's single dark surface, not a second theme. */
 html[data-theme="dark"] {
-  --sh-canvas: #131D25;
-  --sh-surface: #1B2833;
-  --sh-sunken: #243443;
-  --sh-warm: #243443;
-  --sh-ink: #E9EFF3;
-  --sh-ink-soft: #9AADBA;
-  --sh-accent-fill: #82A5B6;
-  --sh-accent-hover: #96B7C7;
-  --sh-accent-text: #82A5B6;
-  --sh-accent-soft: rgba(130, 165, 182, 0.14);
-  --sh-hairline: #2F414F;
-  --sh-boundary: #546B7A;
-  --sh-success: #6FAE8A;
-  --sh-alert: #D08675;
-  --sh-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+  --sh-canvas: #16120b;
+  --sh-surface: #221b10;
+  --sh-sunken: #2b2113;
+  --sh-warm: #2b2113;
+  --sh-ink: #fff6e5;
+  --sh-ink-soft: #d8c9a8;
+  --sh-accent-fill: #e8a04c;
+  --sh-accent-hover: #f2b266;
+  --sh-accent-text: #e8a04c;
+  --sh-accent-soft: rgba(232, 160, 76, 0.14);
+  --sh-hairline: #453723;
+  --sh-boundary: #8a744e;
+  --sh-success: #5fb08c;
+  --sh-alert: #e07a6f;
+  --sh-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.6);
 }
 
 * { box-sizing: border-box; }
