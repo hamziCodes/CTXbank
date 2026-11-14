@@ -26,8 +26,9 @@ import (
 )
 
 // Version is the binary version string. Release builds override it via:
-//   go build -ldflags "-X main.Version=<tag>" ./cmd/ctx
-var Version = "0.1.0"
+//
+//	go build -ldflags "-X main.Version=<tag>" ./cmd/ctx
+var Version = "0.2.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -213,13 +214,13 @@ func runStatus(args []string) {
 
 	if isJSON {
 		payload := map[string]interface{}{
-			"project":       projectName,
-			"branch":        branch,
-			"dirty_count":   len(dirtyFiles),
-			"dirty_files":   dirtyFiles,
-			"idle_seconds":  int(idleDuration.Seconds()),
-			"focus":         focus,
-			"next_step":     nextStep,
+			"project":        projectName,
+			"branch":         branch,
+			"dirty_count":    len(dirtyFiles),
+			"dirty_files":    dirtyFiles,
+			"idle_seconds":   int(idleDuration.Seconds()),
+			"focus":          focus,
+			"next_step":      nextStep,
 			"has_active_ctx": idleDuration > 0,
 		}
 		enc := json.NewEncoder(os.Stdout)
@@ -312,7 +313,7 @@ func runPause(args []string) {
 		}
 	}
 
-	fmt.Printf("Snapshot created: %s (saved to activeContext.md -> decisionLog.md)\n", ckpt.ID)
+	fmt.Printf("Snapshot created: %s (activeContext.md updated; checkpoint saved)\n", ckpt.ID)
 }
 
 func runResume(args []string) {
@@ -429,7 +430,18 @@ func runLintMemory(args []string) {
 func runIngest(args []string) {
 	fs := flag.NewFlagSet("ingest", flag.ExitOnError)
 	yesFlag := fs.Bool("yes", false, "Automatically accept proposed diff without interactive confirmation")
-	_ = fs.Parse(args)
+	// Position-independent --yes: the documented usage is
+	// `ctx ingest <path> [--yes]`, but Go's flag package stops parsing at
+	// the first non-flag argument, so scan for it anywhere first.
+	var filtered []string
+	for _, a := range args {
+		if a == "--yes" {
+			*yesFlag = true
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	_ = fs.Parse(filtered)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -479,12 +491,26 @@ func runIngest(args []string) {
 	fmt.Printf("\nProposed Diff for %s:\n%s\n", prop.TargetFile, prop.ProposedDiff)
 
 	if !*yesFlag {
-		fmt.Print("\nApply this ingestion proposal to memory-bank and archive source? [Y/n]: ")
+		// Never auto-confirm in scripts/agents: non-interactive stdin
+		// (pipe, redirect, EOF) must pass --yes explicitly. An EOF on an
+		// interactive prompt is also an abort, not a yes.
+		if !isTerminalStdin() {
+			fmt.Fprintln(os.Stderr, "Ingestion not applied: confirmation required. Re-run with --yes to apply non-interactively.")
+			os.Exit(1)
+		}
+		fmt.Print("\nApply this ingestion proposal to memory-bank and archive a copy of the source? [Y/n]: ")
 		reader := bufio.NewReader(os.Stdin)
-		answer, _ := reader.ReadString('\n')
+		answer, readErr := reader.ReadString('\n')
 		answer = strings.TrimSpace(strings.ToLower(answer))
+		if readErr != nil {
+			// EOF (e.g. stdin was /dev/null or a closed pipe that still
+			// looks like a terminal): never a confirmation. Exit non-zero
+			// so scripts can gate on it.
+			fmt.Fprintln(os.Stderr, "Ingestion aborted: no confirmation received (EOF). Nothing was changed.")
+			os.Exit(1)
+		}
 		if answer != "" && answer != "y" && answer != "yes" {
-			fmt.Println("Ingestion aborted. Source file remains in inbox.")
+			fmt.Println("Ingestion aborted. Nothing was changed.")
 			return
 		}
 	}
@@ -494,7 +520,7 @@ func runIngest(args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Ingestion committed to %s! Source moved to research/archive/.\n", prop.TargetFile)
+	fmt.Printf("Ingestion committed to %s! A copy was archived to research/archive/ (original left in place).\n", prop.TargetFile)
 }
 
 func runList(args []string) {
@@ -704,7 +730,3 @@ func runPromptSync(args []string) {
 	fmt.Println("   ctx prompt-sync --verify")
 	fmt.Println("3. Or verify in 1 click inside the Web UI: ctx ui")
 }
-
-
-
-

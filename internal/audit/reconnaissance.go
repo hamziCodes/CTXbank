@@ -37,6 +37,9 @@ func (r *AuditReport) GenerateTechContextMarkdown() string {
 	sb.WriteString("# Tech Context — generated from deterministic audit\n\n")
 
 	sb.WriteString("## Discovered Tech Stack\n")
+	if len(r.Manifests) == 0 {
+		sb.WriteString("- No dependency manifests found (go.mod, package.json, etc.). Fill in the stack by hand.\n")
+	}
 	for _, m := range r.Manifests {
 		sb.WriteString(fmt.Sprintf("- **Language:** %s\n", m.Language))
 		sb.WriteString(fmt.Sprintf("- **Build System:** %s\n", m.BuildSystem))
@@ -69,6 +72,9 @@ func (r *AuditReport) GenerateSystemPatternsMarkdown() string {
 	sb.WriteString("# System Patterns — generated from deterministic audit\n\n")
 
 	sb.WriteString("## Architectural Component Map\n")
+	if len(r.Components) == 0 {
+		sb.WriteString("- No components detected by structural heuristics. Describe the architecture by hand.\n")
+	}
 	for _, c := range r.Components {
 		sb.WriteString(fmt.Sprintf("### %s (`%s`)\n", c.Name, c.Path))
 		sb.WriteString(fmt.Sprintf("%s\n\n", c.Description))

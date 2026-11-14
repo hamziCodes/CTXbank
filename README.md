@@ -1,6 +1,8 @@
 # CTXbank
 
-> **A simple, bulletproof memory bank for AI coding assistants and developers.**  
+> **A simple, bulletproof memory bank for AI coding assistants and developers.**
+>
+> Current release: **v0.2.0** — see [CHANGELOG.md](CHANGELOG.md) for what changed.
 > Never lose your project context, never let your AI hallucinate rules, and never waste tokens re-reading files that haven't changed.
 
 ---
@@ -34,7 +36,7 @@ Whenever you finish a task, want to switch git branches, or log off for the nigh
 ```bash
 ctx pause
 ```
-CTXbank takes a snapshot of your git state, records your recent changes, and creates a restore point. When you return, just run:
+CTXbank takes a snapshot of your git state, records your recent changes, creates a restore point, and writes your note and focus straight into `activeContext.md`. When you return, just run:
 ```bash
 ctx resume
 ```
@@ -92,10 +94,10 @@ CTXbank will scan your dependencies, project structure, and exported functions, 
 |---|---|
 | `ctx ui` (or `ctx dashboard`) | Launches this project's local web dashboard. Your project token is embedded in the URL — all API calls require it. |
 | `ctx status` | Shows a clean terminal card with your git branch, dirty files, and current focus. |
-| `ctx pause [--note "…"] [--focus "…"]` | Saves a snapshot, asks for any quick notes on what you did, and logs it. |
+| `ctx pause [--note "…"] [--focus "…"]` | Saves a snapshot and writes the note + focus into `activeContext.md`, so resume picks up exactly there. |
 | `ctx resume` | Prints an instant summary of what you were working on so you can pick up immediately. |
 | `ctx audit` | Scans your project structure, code symbols, and git history without changing code. |
-| `ctx ingest <file.md>` | Ingests raw brainstorm notes, removes duplicate text automatically, and proposes updates. |
+| `ctx ingest <file.md> [--yes]` | Files a note where it belongs (decisions → `decisionLog.md`, tech → `techContext.md`, …), removes duplicates, and proposes the diff first. Your original file is never moved — a copy is archived. Non-interactive runs must pass `--yes`. |
 | `ctx list [dir]` | Shows your recent CTXbank projects (or scans a directory for workspaces). |
 | `ctx lint-memory` | Checks that your memory bank files aren't bloated (keeps activeContext under 150 lines). |
 | `ctx prompt-sync` | Generates an AI directive prompt so your agent can populate the memory bank, then verifies the result. |
@@ -131,7 +133,7 @@ Install the official extension directly in VS Code or Cursor — download the `.
 curl -fsSL -o ctxbank.vsix https://github.com/hamziCodes/CTXbank/releases/download/v0.1.0/ctxbank-0.1.0.vsix
 code --install-extension ctxbank.vsix
 ```
-*(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`).*
+*(Or download `ctxbank-0.1.0.vsix` from [Releases](https://github.com/hamziCodes/CTXbank/releases/tag/v0.1.0) and run `Extensions -> Install from VSIX...`). The extension is unchanged in v0.2.0 — it works with any `ctx` version.*
 
 **Features inside your IDE:**
 - **Activity Bar Sidebar:** Dedicated CTXbank icon with 3 collapsible views:

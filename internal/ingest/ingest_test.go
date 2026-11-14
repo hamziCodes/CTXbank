@@ -69,9 +69,10 @@ We must ensure that OCR retries do not synchronize across clients.
 		t.Fatalf("CommitIngestion failed: %v", err)
 	}
 
-	// Verify original file was moved from inbox to archive
-	if _, err := os.Stat(researchFile); !os.IsNotExist(err) {
-		t.Errorf("research file should have been moved from inbox")
+	// Verify the original file is LEFT in place (ingestion archives a copy;
+	// it must never move or delete the user's only copy of a note)
+	if _, err := os.Stat(researchFile); err != nil {
+		t.Errorf("research file must remain in inbox after ingestion: %v", err)
 	}
 
 	archiveEntries, _ := os.ReadDir(filepath.Join(tempWorkspace, "research", "archive"))

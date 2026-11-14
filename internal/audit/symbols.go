@@ -17,12 +17,12 @@ type DiscoveredSymbol struct {
 }
 
 var (
-	reGoFunc    = regexp.MustCompile(`^func\s+([A-Z][a-zA-Z0-9_]*)\s*\(`)
-	reGoMain    = regexp.MustCompile(`^func\s+main\s*\(`)
-	reGoType    = regexp.MustCompile(`^type\s+([A-Z][a-zA-Z0-9_]*)\s+(struct|interface)`)
-	reGoRoute   = regexp.MustCompile(`\.(GET|POST|PUT|DELETE|Handle|HandleFunc)\s*\(\s*["']([^"']+)["']`)
-	reTsExport  = regexp.MustCompile(`^export\s+(function|class|interface|type)\s+([a-zA-Z0-9_]+)`)
-	rePyDef     = regexp.MustCompile(`^def\s+([a-zA-Z0-9_]+)\s*\(`)
+	reGoFunc   = regexp.MustCompile(`^func\s+([A-Z][a-zA-Z0-9_]*)\s*\(`)
+	reGoMain   = regexp.MustCompile(`^func\s+main\s*\(`)
+	reGoType   = regexp.MustCompile(`^type\s+([A-Z][a-zA-Z0-9_]*)\s+(struct|interface)`)
+	reGoRoute  = regexp.MustCompile(`\.(GET|POST|PUT|DELETE|Handle|HandleFunc)\s*\(\s*["']([^"']+)["']`)
+	reTsExport = regexp.MustCompile(`^export\s+(function|class|interface|type)\s+([a-zA-Z0-9_]+)`)
+	rePyDef    = regexp.MustCompile(`^def\s+([a-zA-Z0-9_]+)\s*\(`)
 )
 
 // ScanSymbols inspects code files across the repository to identify candidate core logic.

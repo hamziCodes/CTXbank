@@ -19,6 +19,55 @@ type IngestionProposal struct {
 	Deduplicated int      `json:"deduplicated_count"`
 }
 
+// classifyTarget picks the memory file a research note belongs in, using
+// deterministic keyword scoring over the whole document. Tech content goes
+// to techContext.md, explicit decisions to decisionLog.md, architecture to
+// systemPatterns.md, and product/user content to productContext.md (the
+// historical default when nothing scores).
+func classifyTarget(content string) string {
+	lower := strings.ToLower(content)
+	// A note that LEADS with an explicit decision is a decision, however
+	// technical its subject is: file it in the decision log. Headings are
+	// skipped; the first two real content lines get this fast path.
+	contentLines := 0
+	for _, line := range strings.Split(lower, "\n") {
+		t := strings.TrimSpace(line)
+		if t == "" || strings.HasPrefix(t, "#") {
+			continue
+		}
+		contentLines++
+		if strings.Contains(t, "decided") || strings.Contains(t, "decision:") || strings.Contains(t, "chose") {
+			return "decisionLog.md"
+		}
+		if contentLines >= 2 {
+			break
+		}
+	}
+	score := func(words []string) int {
+		n := 0
+		for _, w := range words {
+			n += strings.Count(lower, w)
+		}
+		return n
+	}
+	decision := score([]string{"we decided", "decision:", "decided to", "chose", "chosen", "adopted", "rejected", "trade-off", "tradeoff", "rationale"})
+	tech := score([]string{"postgres", "mysql", "sqlite", "database", "sql", "redis", "jwt", "oauth", "api", "sdk", "cli", "docker", "kubernetes", "golang", "python", "typescript", "javascript", "framework", "library", "latency", "cache", "queue", "server", "endpoint", "migration", "schema"})
+	arch := score([]string{"architecture", "pattern", "layer", "module", "component", "microservice", "monolith", "coupling", "invariant"})
+	product := score([]string{"user", "customer", "audience", "experience", "onboarding", "pricing", "market", "persona"})
+
+	best, target := product, "productContext.md"
+	if arch > best {
+		best, target = arch, "systemPatterns.md"
+	}
+	if tech > best {
+		best, target = tech, "techContext.md"
+	}
+	if decision > best {
+		target = "decisionLog.md"
+	}
+	return target
+}
+
 // PrepareIngestion processes an inbox file against the existing memory bank.
 func PrepareIngestion(bankDir, sourcePath string) (*IngestionProposal, error) {
 	data, err := os.ReadFile(sourcePath)
@@ -27,7 +76,7 @@ func PrepareIngestion(bankDir, sourcePath string) (*IngestionProposal, error) {
 	}
 
 	chunks := ParseResearchMarkdown(string(data))
-	targetDoc := "productContext.md"
+	targetDoc := classifyTarget(string(data))
 	targetPath := filepath.Join(bankDir, targetDoc)
 	existingData, _ := os.ReadFile(targetPath)
 	existingStr := string(existingData)
@@ -38,6 +87,27 @@ func PrepareIngestion(bankDir, sourcePath string) (*IngestionProposal, error) {
 
 	normalizedStr := strings.ReplaceAll(existingStr, "\r\n", "\n")
 	existingParagraphs := strings.Split(normalizedStr, "\n\n")
+
+	// Dedup state, seeded with every line already recorded anywhere in the
+	// bank: re-ingesting the same note (or a line already captured in
+	// another file) must not commit the same content twice. The same set
+	// then also dedupes repeats within this document itself.
+	seenLines := map[string]bool{}
+	if entries, err := os.ReadDir(bankDir); err == nil {
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+				continue
+			}
+			if b, err := os.ReadFile(filepath.Join(bankDir, e.Name())); err == nil {
+				for _, l := range strings.Split(string(b), "\n") {
+					if t := strings.TrimSpace(l); t != "" {
+						seenLines[t] = true
+					}
+				}
+			}
+		}
+	}
+	var keptTexts []string
 
 	for _, chunk := range chunks {
 		cleanChunk := strings.TrimSpace(strings.ReplaceAll(chunk.Content, "\r\n", "\n"))
@@ -56,11 +126,38 @@ func PrepareIngestion(bankDir, sourcePath string) (*IngestionProposal, error) {
 				break
 			}
 		}
+		if !isDuplicate {
+			for _, kept := range keptTexts {
+				if IsNearDuplicate(cleanChunk, kept, 3) {
+					isDuplicate = true
+					break
+				}
+			}
+		}
 
 		if isDuplicate {
 			dedupCount++
 			continue
 		}
+
+		// Drop exact duplicate lines already kept from this same document.
+		var dedupedLines []string
+		for _, line := range strings.Split(cleanChunk, "\n") {
+			key := strings.TrimSpace(line)
+			if key != "" {
+				if seenLines[key] {
+					dedupCount++
+					continue
+				}
+				seenLines[key] = true
+			}
+			dedupedLines = append(dedupedLines, line)
+		}
+		chunk.Content = strings.TrimSpace(strings.Join(dedupedLines, "\n"))
+		if chunk.Content == "" && len(chunk.Items) == 0 {
+			continue
+		}
+		keptTexts = append(keptTexts, chunk.Content)
 		filteredChunks = append(filteredChunks, chunk)
 		candidateItems = append(candidateItems, chunk.Items...)
 	}
@@ -97,7 +194,9 @@ func PrepareIngestion(bankDir, sourcePath string) (*IngestionProposal, error) {
 	}, nil
 }
 
-// CommitIngestion applies the proposal and moves the research file to archive.
+// CommitIngestion applies the proposal and archives a COPY of the research
+// file under research/archive/. The original is left in place: ingestion
+// must never delete or move the user's only copy of a note.
 func CommitIngestion(bankDir, repoDir string, prop *IngestionProposal) error {
 	targetPath := filepath.Join(bankDir, prop.TargetFile)
 	existing, _ := os.ReadFile(targetPath)
@@ -122,7 +221,7 @@ func CommitIngestion(bankDir, repoDir string, prop *IngestionProposal) error {
 	}
 	_ = core.UpdateFileMeta(bankDir, prop.TargetFile, "")
 
-	// Move source file to research/archive/
+	// Archive a copy of the source file; the original stays where it was.
 	archiveDir := filepath.Join(repoDir, "research", "archive")
 	if err := os.MkdirAll(archiveDir, 0755); err != nil {
 		return fmt.Errorf("failed to create archive directory: %w", err)
@@ -132,16 +231,12 @@ func CommitIngestion(bankDir, repoDir string, prop *IngestionProposal) error {
 	archiveName := fmt.Sprintf("%s_%s", time.Now().Format("20060102_150405"), baseName)
 	archivePath := filepath.Join(archiveDir, archiveName)
 
-	if err := os.Rename(prop.SourceFile, archivePath); err != nil {
-		// Fallback to copy and remove if across partitions
-		data, err := os.ReadFile(prop.SourceFile)
-		if err != nil {
-			return err
-		}
-		if err := core.WriteAtomic(archivePath, data, 0644); err != nil {
-			return err
-		}
-		_ = os.Remove(prop.SourceFile)
+	data, err := os.ReadFile(prop.SourceFile)
+	if err != nil {
+		return fmt.Errorf("failed to read source file for archiving: %w", err)
+	}
+	if err := core.WriteAtomic(archivePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to archive source copy: %w", err)
 	}
 
 	return nil
@@ -160,4 +255,3 @@ func stripMarkdownHeaders(text string) string {
 	}
 	return strings.Join(lines, " ")
 }
-
