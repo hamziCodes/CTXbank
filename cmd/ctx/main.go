@@ -28,7 +28,7 @@ import (
 // Version is the binary version string. Release builds override it via:
 //
 //	go build -ldflags "-X main.Version=<tag>" ./cmd/ctx
-var Version = "0.2.0"
+var Version = "0.2.1"
 
 func main() {
 	if len(os.Args) < 2 {

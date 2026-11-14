@@ -261,10 +261,10 @@ function getWebviewContent(workspaceRoot: string): string {
   <meta charset="UTF-8">
   <style>
     :root {
-      --brand-primary: #042940;
-      --accent-text: #609abe;
+      --brand-primary: #b45309;
+      --accent-text: #b45309;
       --border-width: 1.5px;
-      --shadow-slab: 2px 2px 0 var(--vscode-widget-border, #30363d);
+      --shadow-slab: 2px 2px 0 var(--vscode-widget-border, #453723);
     }
     body {
       font-family: var(--vscode-font-family);
@@ -277,7 +277,7 @@ function getWebviewContent(workspaceRoot: string): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: var(--border-width) solid var(--vscode-widget-border, #30363d);
+      border-bottom: var(--border-width) solid var(--vscode-widget-border, #453723);
       padding-bottom: 16px;
       margin-bottom: 24px;
     }
@@ -291,8 +291,8 @@ function getWebviewContent(workspaceRoot: string): string {
       gap: 16px;
     }
     .node-card {
-      background: var(--vscode-sideBar-background, #161b22);
-      border: var(--border-width) solid var(--vscode-widget-border, #30363d);
+      background: var(--vscode-sideBar-background, #16120b);
+      border: var(--border-width) solid var(--vscode-widget-border, #453723);
       border-radius: 6px;
       padding: 16px;
       box-shadow: var(--shadow-slab);
@@ -309,15 +309,15 @@ function getWebviewContent(workspaceRoot: string): string {
     }
     .node-sub {
       font-size: 12px;
-      color: var(--vscode-descriptionForeground, #8b949e);
+      color: var(--vscode-descriptionForeground, #6b5b45);
     }
     .hot-badge {
       display: inline-block;
       font-size: 10px;
       font-weight: 700;
       padding: 2px 6px;
-      background: #609abe;
-      color: #000000;
+      background: #b45309;
+      color: #16120b;
       border-radius: 3px;
       margin-top: 8px;
     }

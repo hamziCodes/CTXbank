@@ -4,91 +4,94 @@
    ========================================================================== */
 
 :root {
-  /* VERTEX Soft Harbor palette — flat, calm, welcoming */
-  --brand-primary: #5B7A8C;
-  --brand-hover: #486575;
-  --brand-light: rgba(91, 122, 140, 0.10);
-  --brand-accent: #5B7A8C;
-  --accent-text: #3E5C6B;
-  --focus-ring: rgba(91, 122, 140, 0.35);
+  /* Wavia "Marigold Market" (Theme B) — the Wavia engine brand layer:
+     warm paper, burnt marigold, ink text. One source of truth:
+     WAVIA_WEBSITE/src/theme.css. Never #fff, never a cool grey. */
+  --brand-primary: #b45309;
+  --brand-hover: #93430a;
+  --brand-light: rgba(180, 83, 9, 0.10);
+  --brand-accent: #b45309;
+  --accent-text: #93430a;
+  --focus-ring: rgba(28, 20, 8, 0.35);
 
-  /* Light Canvas & Surfaces */
-  --app-canvas: #F4F6F7;
-  --app-surface: #ffffff;
-  --app-surface-sunken: #E9EFF2;
-  --app-surface-hover: rgba(30, 42, 51, 0.04);
-  --app-line: #D8DFE4;
-  --app-line-strong: #768893;
-  --app-ink: #1E2A33;
-  --app-ink-soft: #5B6F7B;
-  --app-ink-muted: #768893;
+  /* Warm Paper Canvas & Surfaces */
+  --app-canvas: #fff6e5;
+  --app-surface: #fffbf2;
+  --app-surface-sunken: #f6e6c8;
+  --app-surface-hover: rgba(28, 20, 8, 0.04);
+  --app-line: #e8d8ba;
+  --app-line-strong: #1c1408;
+  --app-ink: #1c1408;
+  --app-ink-soft: #6b5b45;
+  --app-ink-muted: #6b5b45;
 
-  /* State Colors */
-  --positive: #3E7C5B;
-  --positive-soft: rgba(62, 124, 91, 0.10);
-  --negative: #B4543F;
-  --negative-soft: rgba(180, 84, 63, 0.10);
-  --attention: #A86A1F;
-  --attention-soft: rgba(168, 106, 31, 0.10);
+  /* State Colors — palm green verified, brass shield, alert red */
+  --positive: #1e6b4f;
+  --positive-soft: rgba(30, 107, 79, 0.10);
+  --negative: #b3261e;
+  --negative-soft: rgba(179, 38, 30, 0.10);
+  --attention: #a8862b;
+  --attention-soft: rgba(168, 134, 43, 0.12);
 
-  /* Smooth Radius System */
+  /* Marigold radii: pills for controls, 24px cards, 40px panels */
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 40px;
   --radius-full: 9999px;
 
-  /* Modern Elevated Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 0 0 1px var(--app-line);
-  --shadow-card-hover: 0 12px 30px -4px rgba(4, 41, 64, 0.12), 0 0 0 1px var(--brand-accent);
-  --shadow-modal: 0 20px 40px -8px rgba(15, 23, 42, 0.25), 0 0 0 1px var(--app-line);
+  /* Flat by rule — shadow is earned, warm-tinted when used */
+  --shadow-sm: 0 1px 2px 0 rgba(80, 52, 12, 0.06);
+  --shadow-card: 0 0 0 1px var(--app-line);
+  --shadow-card-hover: 0 24px 60px -24px rgba(80, 52, 12, 0.35), 0 0 0 1px var(--brand-accent);
+  --shadow-modal: 0 24px 60px -24px rgba(80, 52, 12, 0.35), 0 0 0 1px var(--app-line);
 
   /* Transitions */
   --transition-fast: all 0.15s ease;
   --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Soft Harbor typography: Fraunces for display headings and brand */
+/* Wavia typography: Bricolage Grotesque for display headings and brand */
 h1, h2, h3, .view-title, .modal-title, .brand-title {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
 
-/* Dark Theme — Soft Harbor dark */
+/* Dark act — Wavia's single dark surface (#16120b) with cream text.
+   Marigold stays the live-state colour; chrome inverts to cream. */
 html.dark {
-  --brand-primary: #82A5B6;
-  --brand-hover: #96B7C7;
-  --brand-light: rgba(130, 165, 182, 0.14);
-  --brand-accent: #82A5B6;
-  --accent-text: #82A5B6;
-  --focus-ring: rgba(130, 165, 182, 0.40);
+  --brand-primary: #e8a04c;
+  --brand-hover: #f2b266;
+  --brand-light: rgba(232, 160, 76, 0.14);
+  --brand-accent: #e8a04c;
+  --accent-text: #e8a04c;
+  --focus-ring: rgba(255, 246, 229, 0.40);
 
-  --app-canvas: #131D25;
-  --app-surface: #1B2833;
-  --app-surface-sunken: #243443;
-  --app-surface-hover: rgba(233, 239, 243, 0.06);
-  --app-line: #2F414F;
-  --app-line-strong: #546B7A;
-  --app-ink: #E9EFF3;
-  --app-ink-soft: #9AADBA;
-  --app-ink-muted: #768893;
+  --app-canvas: #16120b;
+  --app-surface: #221b10;
+  --app-surface-sunken: #2b2113;
+  --app-surface-hover: rgba(255, 246, 229, 0.06);
+  --app-line: #453723;
+  --app-line-strong: #8a744e;
+  --app-ink: #fff6e5;
+  --app-ink-soft: #d8c9a8;
+  --app-ink-muted: #a08c64;
 
-  --positive: #6FAE8A;
-  --positive-soft: rgba(111, 174, 138, 0.12);
-  --negative: #D08675;
-  --negative-soft: rgba(208, 134, 117, 0.12);
-  --attention: #D9A45B;
-  --attention-soft: rgba(217, 164, 91, 0.12);
+  --positive: #5fb08c;
+  --positive-soft: rgba(95, 176, 140, 0.12);
+  --negative: #e07a6f;
+  --negative-soft: rgba(224, 122, 111, 0.12);
+  --attention: #d9b45b;
+  --attention-soft: rgba(217, 180, 91, 0.12);
 
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--app-line);
-  --shadow-card-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--brand-primary);
-  --shadow-modal: 0 20px 40px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--app-line-strong);
+  --shadow-card: 0 0 0 1px var(--app-line);
+  --shadow-card-hover: 0 24px 60px -24px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--brand-primary);
+  --shadow-modal: 0 24px 60px -24px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--app-line-strong);
 }
 
 /* Global Reset */
@@ -134,11 +137,11 @@ header {
   height: 36px;
   border-radius: var(--radius-sm);
   background: var(--brand-primary);
-  color: #ffffff;
+  color: #fff6e5;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(4, 41, 64, 0.2);
+  box-shadow: 0 2px 8px rgba(80, 52, 12, 0.2);
 }
 
 .brand-text {
@@ -194,13 +197,13 @@ header {
 .status-pill.clean {
   background: var(--positive-soft);
   color: var(--positive);
-  border-color: rgba(16, 185, 129, 0.25);
+  border-color: rgba(30, 107, 79, 0.25);
 }
 
 .status-pill.dirty {
   background: var(--attention-soft);
   color: var(--attention);
-  border-color: rgba(245, 158, 11, 0.25);
+  border-color: rgba(180, 83, 9, 0.25);
 }
 
 /* Button System */
@@ -227,18 +230,18 @@ header {
 
 .btn-primary {
   background-color: var(--brand-primary);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(4, 41, 64, 0.2);
+  color: #fff6e5;
+  box-shadow: 0 2px 8px rgba(80, 52, 12, 0.2);
 }
 
 html.dark .btn-primary {
   background-color: var(--brand-primary);
-  color: #090d12;
+  color: #16120b;
 }
 
 .btn-primary:hover {
   filter: brightness(1.1);
-  box-shadow: 0 4px 14px rgba(4, 41, 64, 0.3);
+  box-shadow: 0 4px 14px rgba(80, 52, 12, 0.3);
 }
 
 .btn-secondary {
@@ -404,21 +407,21 @@ html.dark .nav-item.active {
 /* ==================== VIEW 1: HERO & OVERVIEW STYLES ==================== */
 .hero-card {
   background: var(--brand-primary);
-  color: #ffffff;
+  color: #fff6e5;
   border-radius: var(--radius-lg);
   padding: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  box-shadow: 0 8px 24px rgb(30 42 51 / 0.16);
+  box-shadow: 0 24px 60px -24px rgba(80, 52, 12, 0.35);
   position: relative;
   overflow: hidden;
 }
 
-/* Dark mode keeps a deep harbor tone so the white hero text stays legible */
+/* Dark act: the hero card sits on Wavia's dark surface, cream text stays legible */
 html.dark .hero-card {
-  background: #486575;
+  background: #221b10;
 }
 
 .hero-content {
@@ -698,7 +701,7 @@ html.dark .hero-card {
   height: 28px;
   border-radius: 50%;
   background: var(--brand-primary);
-  color: #ffffff;
+  color: #fff6e5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -708,7 +711,7 @@ html.dark .hero-card {
 }
 
 html.dark .step-num {
-  color: #090d12;
+  color: #16120b;
 }
 
 .step-title {
@@ -752,7 +755,7 @@ html.dark .step-num {
 .node-group:hover rect {
   stroke-width: 2px;
   stroke: var(--brand-accent);
-  filter: drop-shadow(0 4px 12px rgba(4, 41, 64, 0.15));
+  filter: drop-shadow(0 4px 12px rgba(80, 52, 12, 0.15));
 }
 
 .node-inspector-card {
@@ -958,7 +961,7 @@ html.dark .file-name-title {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(22, 18, 11, 0.5);
   backdrop-filter: blur(6px);
   display: none;
   align-items: center;
@@ -1110,7 +1113,7 @@ html.dark .file-name-title {
 .chip.clean {
   background: var(--positive-soft);
   color: var(--positive);
-  border-color: rgba(16, 185, 129, 0.2);
+  border-color: rgba(30, 107, 79, 0.2);
 }
 
 /* Toast Notifications */
@@ -1237,7 +1240,7 @@ html.dark .file-name-title {
 /* Active Project Banner */
 .active-project-banner {
   background: var(--brand-light);
-  border: 1px solid rgba(0, 119, 182, 0.25);
+  border: 1px solid rgba(180, 83, 9, 0.25);
   border-radius: var(--radius-md);
   padding: 14px 18px;
   display: flex;
@@ -1354,7 +1357,7 @@ html.dark .file-name-title {
 
 .banner-box {
   background: var(--brand-light);
-  border: 1px solid rgba(0, 119, 182, 0.25);
+  border: 1px solid rgba(180, 83, 9, 0.25);
   border-radius: var(--radius-md);
   padding: 12px 16px;
 }
